@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pairs-trading-template"
+version = "0.1.0"
+description = "A minimal, auditable pairs-trading research backtest"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+pairs-backtest = "pairs_trading.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
