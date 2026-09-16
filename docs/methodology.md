@@ -87,6 +87,11 @@ each close's cash, holdings, costs, action, and queued next order.
 
 ## Limits
 
+Named market choices use Yahoo Finance adjusted closes. This makes the ledger a
+total-return proxy in adjusted-share units, not a reconstruction of actual cash
+dividend flows or real share counts. The three-stock choice uses Dell versus a
+fixed-coefficient NVIDIA/Micron basket. See [market data and basket construction](../data/market/README.md).
+
 This template omits dividends, cash/financing interest, margin requirements,
 short availability and recalls, price impact, minimum lots, exchange calendars,
 and intraday stop execution. Costs are constant assumptions, not venue quotes.

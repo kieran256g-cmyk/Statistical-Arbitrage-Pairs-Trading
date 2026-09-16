@@ -1,0 +1,24 @@
+{
+  "pair": "seagate-wdc",
+  "pair_name": "Seagate / Western Digital",
+  "asset_a": "STX",
+  "asset_b": "WDC",
+  "source": "Yahoo Finance adjusted daily closes: STX / WDC",
+  "price_basis": "split- and distribution-adjusted close; total-return proxy, not executable prices",
+  "currency": "USD",
+  "downloaded_at_utc": "2026-09-16T21:10:00.916347+00:00",
+  "requested_start": "2023-01-01",
+  "requested_end_exclusive": "2026-09-16",
+  "first_date": "2023-01-03",
+  "last_date": "2026-09-15",
+  "rows": 928,
+  "source_urls": [
+    "https://query1.finance.yahoo.com/v8/finance/chart/STX?period1=1672531200&period2=1789516800&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+    "https://query1.finance.yahoo.com/v8/finance/chart/WDC?period1=1672531200&period2=1789516800&interval=1d&events=div%2Csplits&includeAdjustedClose=true"
+  ],
+  "basket_shares_per_unit": {},
+  "basket_rule": null,
+  "unmatched_dates_dropped": 0,
+  "alignment": "intersection of available dates; no forward filling",
+  "csv_sha256": "530d0e76cccbd0fa16f9d32324cd1530af4e2d6f2a1284911e4b029f38115a9d"
+}

@@ -43,7 +43,8 @@ def write_report(result: Result, output: Path, metadata: dict) -> None:
     summary = {**result.summary, **metadata}
     (output / "summary.json").write_text(json.dumps(summary, indent=2, allow_nan=False)+"\n", encoding="utf-8")
     write_csv(output / "equity.csv", result.curve, list(result.curve[0]))
-    write_csv(output / "trades.csv", result.trades, TRADE_FIELDS)
+    extra_fields = ["shares_DELL", "shares_NVDA", "shares_MU"] if metadata.get("basket_shares_per_unit") else []
+    write_csv(output / "trades.csv", result.trades, TRADE_FIELDS + extra_fields)
     sharpe = summary["annualized_sharpe_252_zero_risk_free"]
     sharpe_text = "N/A" if sharpe is None else f"{sharpe:.2f}"
     cards = [("Ending equity", f"{summary['ending_equity']:,.2f}"),
@@ -51,13 +52,19 @@ def write_report(result: Result, output: Path, metadata: dict) -> None:
              ("Max drawdown", f"{summary['max_drawdown']:.2%}"),
              ("Closed trades", str(summary['closed_trades']))]
     card_html = "".join(f'<div class="card"><span>{label}</span><strong>{value}</strong></div>' for label, value in cards)
+    def position_label(side):
+        return side.replace("_A", " " + str(metadata.get("asset_a", "A"))).replace("_B", " " + str(metadata.get("asset_b", "B"))).replace("_", " ")
+
     table_rows = "".join(
-        f"<tr><td>{t['entry_date']}</td><td>{t['exit_date']}</td><td>{escape(t['side'])}</td>"
+        f"<tr><td>{t['entry_date']}</td><td>{t['exit_date']}</td><td>{escape(position_label(t['side']))}</td>"
         f"<td>{t['net_pnl']:,.2f}</td><td>{escape(t['exit_reason'])}</td></tr>" for t in result.trades)
     if not table_rows:
         table_rows = '<tr><td colspan="5">No trades met the configured rules.</td></tr>'
     banner = ("SYNTHETIC DEMO · These invented prices demonstrate the code, not market performance."
               if metadata["synthetic_data"] else "HISTORICAL SIMULATION · Results depend on the supplied data and execution assumptions.")
+    pair_note = escape(str(metadata.get("pair_name", "Custom pair" if not metadata["synthetic_data"] else "Synthetic example")))
+    basis_note = escape(str(metadata.get("price_basis", "Prices supplied by the user" if not metadata["synthetic_data"] else "Invented prices")))
+    basket_note = ("Basket B holds NVIDIA and Micron: equal dollars on the first shared data date, fixed adjusted-share coefficients thereafter. Weights drift; this is not a daily rebalanced basket. The CSV reports include all three adjusted-share holdings." if extra_fields else "")
     document = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pairs trading backtest</title><style>
@@ -69,7 +76,7 @@ h1{{font-size:36px;margin:8px 0}}h2{{font-size:21px}}p{{line-height:1.6}}.eyebro
 table{{width:100%;border-collapse:collapse;text-align:left;font-size:14px}}td,th{{border-bottom:1px solid #e5eaf1;padding:10px 8px}}.scroll{{overflow:auto}}
 .muted{{color:#52637a;font-size:14px}}a{{color:#1d4ed8}}@media(max-width:650px){{.cards{{grid-template-columns:repeat(2,1fr)}}h1{{font-size:28px}}}}
 </style></head><body><main><div class="eyebrow">RESEARCH TEMPLATE / PAIRS TRADING</div>
-<h1>Mean-reversion backtest</h1><p>{summary['start']} to {summary['end']} · Long/short pair · Next-close fills</p>
+<h1>{pair_note}</h1><p>{summary['start']} to {summary['end']} · Mean-reversion backtest · Next-close fills</p>
 <div class="banner">{banner}</div><div class="cards">{card_html}</div>
 <section><h2>Portfolio equity</h2>{equity_chart(result)}
 <p class="muted">Includes modelled transaction and borrow costs. Equity is in the same currency as the input prices.
@@ -81,5 +88,6 @@ Shares stay fixed until exit. Dollar exposure is matched at entry and can drift 
 <p class="muted">No cointegration or pair-selection test, live orders, financing interest, dividends, margin calls, borrow availability, or liquidity model.
 Statistical arbitrage can lose money. A delayed stop can fill beyond its threshold.</p>
 <p><a href="summary.json">Configuration and metrics</a> · <a href="equity.csv">Daily ledger</a> · <a href="trades.csv">Trade log</a></p>
+<p>{basket_note}</p><p class="muted">Price basis: {basis_note}. Adjusted histories can be revised by the provider. Dividend cash flows are not separately booked.</p>
 <p class="muted">Data source: {escape(str(metadata['source']))}</p></section></main></body></html>'''
     (output / "report.html").write_text(document, encoding="utf-8")

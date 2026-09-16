@@ -1,13 +1,15 @@
 # Statistical Arbitrage: Pairs Trading
 
 A small Python template for researching a basic two-asset mean-reversion strategy.
-It includes a configurable algorithm, a cash-and-share backtest, synthetic sample
-data, an offline HTML report, CSV trade logs, and accounting tests.
+It includes a configurable algorithm, a cash-and-share backtest, real historical
+prices for selectable pairs and a three-stock basket, an offline HTML report,
+CSV trade logs, and accounting tests.
 
-**The bundled data is invented. Demo returns are not market performance.**
+**The default uses cached real market data.** The invented demo remains available
+with `--demo`. Historical results depend on the data and model assumptions.
 This is a research backtest, with no broker connection or live-order execution.
 
-## Run the example
+## Choose stocks and run
 
 Install Python 3.10 or newer, download or clone the repository, then open its
 folder in VS Code. No external Python packages or API keys are required.
@@ -18,10 +20,60 @@ In the terminal, run:
 python run.py
 ```
 
-On Windows, `py run.py` also works if the Python launcher is installed.
-Open **results/report.html** to see the equity curve and trades. The run also
+Choose a number from the menu. On Windows, `py run.py` also works if the Python
+launcher is installed. Without an interactive terminal, the default is Dell/NVIDIA.
+Open **results/<pair>/report.html** to see the equity curve and trades. The run also
 writes `summary.json`, `equity.csv`, and `trades.csv` to that folder.
 Running again with the same output directory replaces those four files.
+
+| Selection (`--pair`) | Asset A | Asset B |
+| --- | --- | --- |
+| `dell-nvidia` | Dell (DELL) | NVIDIA (NVDA) |
+| `dell-micron` | Dell (DELL) | Micron (MU) |
+| `nvidia-micron` | NVIDIA (NVDA) | Micron (MU) |
+| `dell-nvidia-micron` | Dell (DELL) | NVIDIA + Micron basket |
+| `coke-pepsi` | Coca-Cola (KO) | PepsiCo (PEP) |
+| `seagate-wdc` | Seagate (STX) | Western Digital (WDC) |
+| `visa-mastercard` | Visa (V) | Mastercard (MA) |
+| `exxon-chevron` | ExxonMobil (XOM) | Chevron (CVX) |
+
+For example:
+
+```powershell
+python run.py --pair coke-pepsi
+python run.py --pair dell-nvidia-micron
+python run.py --pair visa-mastercard --refresh
+```
+
+Use `--list-pairs` to print the choices, or `--choose` to explicitly show the menu.
+Each choice gets its own results folder. `--refresh` downloads that choice again;
+without it, the bundled snapshot works offline. To refresh everything:
+
+```powershell
+python scripts/import_market_data.py
+```
+
+Downloads request daily history from January 2023 through yesterday, excluding
+today's potentially unfinished session. The report displays the actual available
+date range. The Yahoo Finance public endpoint needs internet access and may become
+unavailable or rate-limited; download errors are reported, never replaced by fake data.
+Snapshots and their source URLs, retrieval dates and checksums live in `data/market/`.
+
+Prices are Yahoo Finance **adjusted closes**, accounting for splits and distributions.
+These are a total-return proxy rather than executable historical prices. The model
+uses adjusted-share units and does not separately book dividend cash flows. Only
+dates available for every constituent are used; missing dates are never filled.
+These company choices are not validated as cointegrated or profitable.
+
+### Three-stock choice
+
+`dell-nvidia-micron` trades Dell against a NVIDIA/Micron basket. The basket starts
+at 100 with 50 dollars in each constituent on the first shared date. Its adjusted
+share coefficients then stay fixed, so its weights drift. Each entry matches the
+current total basket notional against Dell. It is **not** three independent pair
+trades, and it does not rebalance NVIDIA/Micron to 50/50 on every entry.
+The daily ledger and trade log include `shares_DELL`, `shares_NVDA` and `shares_MU`.
+See [market-data details](data/market/README.md) for the exact formula.
 
 ## The basic algorithm
 
@@ -93,11 +145,14 @@ run.py                         Simple entry point
 config.json                    Editable strategy assumptions
 src/pairs_trading/
   data.py                      CSV validation and synthetic generator
+  market.py                    Company choices, downloads, alignment and basket
   strategy.py                  Rolling signal and entry/exit rules
   backtest.py                  Execution timing and two-leg cash ledger
   report.py                    CSV, JSON, and offline HTML outputs
   cli.py                       Command-line interface
 data/sample_prices.csv         Clearly synthetic example
+data/market/                   Real snapshots and provenance metadata
+scripts/import_market_data.py  Refresh all real-data choices
 scripts/generate_demo.py       Reproduce the example data
 tests/test_backtest.py         Timing, cost, and accounting checks
 docs/methodology.md            Model details and limits
@@ -119,4 +174,5 @@ To regenerate the synthetic example:
 
 ```powershell
 python scripts/generate_demo.py
+python run.py --demo
 ```

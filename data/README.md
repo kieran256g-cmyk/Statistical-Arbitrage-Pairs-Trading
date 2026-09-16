@@ -1,5 +1,9 @@
 # Price inputs
 
+The default run uses real company histories in [market/](market/README.md).
+Run `python run.py` to choose a pair or the three-stock basket. The following
+synthetic file is only used when explicitly selecting `--demo`.
+
 `sample_prices.csv` contains 400 **synthetic** observations for invented assets A
 and B. They are generated from a common random trend and an artificial
 mean-reverting spread, with seed 7. Dates are weekdays starting 2020-01-02;

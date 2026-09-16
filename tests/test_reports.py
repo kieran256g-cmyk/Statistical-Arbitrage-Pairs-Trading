@@ -22,7 +22,7 @@ class ReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "results"
             with redirect_stdout(io.StringIO()):
-                status = main(["--output", str(output)])
+                status = main(["--demo", "--output", str(output)])
             self.assertEqual(status, 0)
             self.assertEqual({p.name for p in output.iterdir()}, {"equity.csv", "trades.csv", "summary.json", "report.html"})
             summary = json.loads((output / "summary.json").read_text())
@@ -35,7 +35,7 @@ class ReportTests(unittest.TestCase):
             HTMLParser().feed(html)
             before = (output / "summary.json").read_bytes()
             with redirect_stdout(io.StringIO()):
-                self.assertEqual(main(["--output", str(output)]), 0)
+                self.assertEqual(main(["--demo", "--output", str(output)]), 0)
             self.assertEqual((output / "summary.json").read_bytes(), before)
 
     def test_supplied_csv_and_zero_trade_output(self):
