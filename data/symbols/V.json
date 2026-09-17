@@ -1,0 +1,10 @@
+{
+  "symbol": "V",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/V?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.374394+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 929,
+  "csv_sha256": "0b982a9ebca2d8c9882f0f90dc8d9fbd716a3a7227b6aef49f66d22430049f6b"
+}

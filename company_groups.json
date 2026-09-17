@@ -1,0 +1,7 @@
+{
+  "technology": {"name": "Technology", "companies": {"DELL": "Dell", "MU": "Micron", "NVDA": "NVIDIA"}},
+  "drinks": {"name": "Soft drinks", "companies": {"KO": "Coca-Cola", "PEP": "PepsiCo", "KDP": "Keurig Dr Pepper"}},
+  "storage": {"name": "Storage and memory", "companies": {"STX": "Seagate", "WDC": "Western Digital", "SNDK": "Sandisk", "MU": "Micron"}},
+  "payments": {"name": "Payments", "companies": {"V": "Visa", "MA": "Mastercard", "PYPL": "PayPal"}},
+  "energy": {"name": "Energy", "companies": {"XOM": "ExxonMobil", "CVX": "Chevron", "COP": "ConocoPhillips"}}
+}

@@ -1,0 +1,10 @@
+{
+  "symbol": "NVDA",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/NVDA?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.344895+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 929,
+  "csv_sha256": "f302295f9c55f136d178c48b010686dbaca7ecf151b363d777b1472fb8ffb010"
+}

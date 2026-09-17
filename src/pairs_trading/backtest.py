@@ -68,17 +68,29 @@ def close_position(position: Position, bar: Bar, index: int, order: Order,
     return market_value - cost, trade
 
 
-def backtest(bars: list[Bar], config: Config) -> Result:
+def backtest(bars: list[Bar], config: Config, strategy=None) -> Result:
     validate_bars(bars)
     if len(bars) < config.lookback + 3:
         raise ValueError(f"Need at least {config.lookback + 3} rows for warm-up and next-close execution")
-    observations = signals(bars, config.lookback)
+    if strategy is None:
+        observations = signals(bars, config.lookback)
+    else:
+        observations = [None] * len(bars)
+    entry_fn = entry_side if strategy is None else strategy.entry_side
+    exit_fn = exit_reason if strategy is None else strategy.exit_reason
     cash = config.initial_capital
     previous_equity = cash
     position = None
     pending = None
     curve, trades = [], []
     for i, (bar, signal) in enumerate(zip(bars, observations)):
+        if strategy is not None:
+            try:
+                signal = strategy.signal(tuple(bars[:i+1]), config)
+                if not math.isfinite(signal.spread) or (signal.zscore is not None and not math.isfinite(signal.zscore)):
+                    raise ValueError("signal must contain finite spread and finite zscore (or None)")
+            except Exception as error:
+                raise ValueError(f"Strategy signal failed on {bars[i].date}: {error}") from error
         today = bar.date.isoformat()
         fees_today = 0.0
         borrow_today = 0.0
@@ -141,12 +153,29 @@ def backtest(bars: list[Bar], config: Config) -> Result:
                 unrealized = (position.shares_a * (bar.price_a-position.entry_a)
                               + position.shares_b * (bar.price_b-position.entry_b)
                               - position.entry_cost - position.borrow_cost)
-                reason = exit_reason(signal.zscore, position.side, i-position.entry_index+1,
+                try:
+                    reason = exit_fn(signal.zscore, position.side, i-position.entry_index+1,
                                      unrealized, position.entry_gross, config)
+                    if reason is not None and (not isinstance(reason, str) or not reason):
+                        raise ValueError("exit_reason must return a nonempty string or None")
+                except Exception as error:
+                    raise ValueError(f"Strategy exit failed on {today}: {error}") from error
+                if strategy is not None:
+                    if unrealized <= -config.stop_loss_fraction * position.entry_gross:
+                        reason = "loss_stop"
+                    elif i-position.entry_index+1 >= config.max_holding_bars:
+                        reason = "time_exit"
                 if reason:
                     pending = Order(0, today, reason)
-            elif not closed_today:
-                side = entry_side(signal.zscore, config)
+            elif not closed_today and (strategy is None or i >= config.lookback):
+                try:
+                    side = entry_fn(signal.zscore, config)
+                    if type(side) is not int or side not in (-1, 0, 1):
+                        raise ValueError("entry_side must return -1, 0 or 1")
+                except Exception as error:
+                    raise ValueError(f"Strategy entry failed on {today}: {error}") from error
+                if strategy is not None and i < config.lookback:
+                    side = 0
                 if side:
                     pending = Order(side, today, "entry")
 

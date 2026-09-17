@@ -1,0 +1,10 @@
+{
+  "symbol": "SNDK",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/SNDK?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.362393+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 399,
+  "csv_sha256": "630a47d988f8c43b14e25b6a4f284ad3960035c6d09dcb69794cee7066599d0e"
+}

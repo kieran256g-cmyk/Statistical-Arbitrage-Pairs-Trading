@@ -43,7 +43,8 @@ def write_report(result: Result, output: Path, metadata: dict) -> None:
     summary = {**result.summary, **metadata}
     (output / "summary.json").write_text(json.dumps(summary, indent=2, allow_nan=False)+"\n", encoding="utf-8")
     write_csv(output / "equity.csv", result.curve, list(result.curve[0]))
-    extra_fields = ["shares_DELL", "shares_NVDA", "shares_MU"] if metadata.get("basket_shares_per_unit") else []
+    extra_fields = (["shares_"+s for s in metadata["selected_symbols"]] if metadata.get("side_coefficients") else
+                    ["shares_DELL", "shares_NVDA", "shares_MU"] if metadata.get("basket_shares_per_unit") else [])
     write_csv(output / "trades.csv", result.trades, TRADE_FIELDS + extra_fields)
     sharpe = summary["annualized_sharpe_252_zero_risk_free"]
     sharpe_text = "N/A" if sharpe is None else f"{sharpe:.2f}"
@@ -64,7 +65,8 @@ def write_report(result: Result, output: Path, metadata: dict) -> None:
               if metadata["synthetic_data"] else "HISTORICAL SIMULATION · Results depend on the supplied data and execution assumptions.")
     pair_note = escape(str(metadata.get("pair_name", "Custom pair" if not metadata["synthetic_data"] else "Synthetic example")))
     basis_note = escape(str(metadata.get("price_basis", "Prices supplied by the user" if not metadata["synthetic_data"] else "Invented prices")))
-    basket_note = ("Basket B holds NVIDIA and Micron: equal dollars on the first shared data date, fixed adjusted-share coefficients thereafter. Weights drift; this is not a daily rebalanced basket. The CSV reports include all three adjusted-share holdings." if extra_fields else "")
+    basket_note = escape(metadata.get("basket_description", "Basket B holds NVIDIA and Micron: equal dollars on the first shared data date, fixed adjusted-share coefficients thereafter. Weights drift; the CSV reports include all three adjusted-share holdings." if metadata.get("basket_shares_per_unit") else ""))
+    strategy_note = escape(str(metadata.get("strategy_description", metadata.get("strategy", "Mean reversion"))))
     document = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pairs trading backtest</title><style>
@@ -76,14 +78,14 @@ h1{{font-size:36px;margin:8px 0}}h2{{font-size:21px}}p{{line-height:1.6}}.eyebro
 table{{width:100%;border-collapse:collapse;text-align:left;font-size:14px}}td,th{{border-bottom:1px solid #e5eaf1;padding:10px 8px}}.scroll{{overflow:auto}}
 .muted{{color:#52637a;font-size:14px}}a{{color:#1d4ed8}}@media(max-width:650px){{.cards{{grid-template-columns:repeat(2,1fr)}}h1{{font-size:28px}}}}
 </style></head><body><main><div class="eyebrow">RESEARCH TEMPLATE / PAIRS TRADING</div>
-<h1>{pair_note}</h1><p>{summary['start']} to {summary['end']} · Mean-reversion backtest · Next-close fills</p>
+<h1>{pair_note}</h1><p>{summary['start']} to {summary['end']} · {strategy_note} · Next-close fills</p>
 <div class="banner">{banner}</div><div class="cards">{card_html}</div>
 <section><h2>Portfolio equity</h2>{equity_chart(result)}
 <p class="muted">Includes modelled transaction and borrow costs. Equity is in the same currency as the input prices.
 Sharpe (252 sessions, zero risk-free rate): {sharpe_text}. Warm-up sessions are included.</p></section>
 <section><h2>Closed trades</h2><div class="scroll"><table><thead><tr><th>Entry</th><th>Exit</th><th>Position</th><th>Net P&amp;L</th><th>Exit reason</th></tr></thead>
 <tbody>{table_rows}</tbody></table></div></section>
-<section><h2>Assumptions</h2><p>Signals use the log-price ratio and the preceding rolling window. Orders fill at the following close.
+<section><h2>Assumptions</h2><p>Signals come from the selected strategy. Orders fill at the following close.
 Shares stay fixed until exit. Dollar exposure is matched at entry and can drift afterwards. The final position is liquidated at the last close.</p>
 <p class="muted">No cointegration or pair-selection test, live orders, financing interest, dividends, margin calls, borrow availability, or liquidity model.
 Statistical arbitrage can lose money. A delayed stop can fill beyond its threshold.</p>
