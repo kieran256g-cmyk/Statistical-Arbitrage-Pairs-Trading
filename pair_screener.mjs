@@ -60,6 +60,27 @@ function strategiesFrom(config) {
   if (config.strategy) return [{ name: 'default', ...config.strategy }];
   throw new Error('Configure at least one strategy in the strategies array.');
 }
+function candidatePairs(config) {
+  const order = new Map(config.tickers.map((ticker, index) => [ticker, index]));
+  const pairs = new Map();
+  const addPair = (a, b, group) => {
+    if (a === b) return;
+    const [leftTicker, rightTicker] = order.get(a) < order.get(b) ? [a, b] : [b, a];
+    const key = `${leftTicker}/${rightTicker}`;
+    const row = pairs.get(key) ?? { leftTicker, rightTicker, pair: key, relationship: [] };
+    row.relationship.push(group);
+    pairs.set(key, row);
+  };
+  if (config.screenMode === 'all') {
+    for (let i = 0; i < config.tickers.length; i++) for (let j = i + 1; j < config.tickers.length; j++) addPair(config.tickers[i], config.tickers[j], 'all companies');
+  } else {
+    for (const [group, members] of Object.entries(config.pairGroups ?? {})) {
+      for (const ticker of members) if (!order.has(ticker)) throw new Error(`${ticker} in pairGroups is not in tickers`);
+      for (let i = 0; i < members.length; i++) for (let j = i + 1; j < members.length; j++) addPair(members[i], members[j], group);
+    }
+  }
+  return [...pairs.values()].map(row => ({ ...row, relationship: [...new Set(row.relationship)].join('; ') }));
+}
 
 async function getPrices(ticker, years) {
   const cacheFile = path.join(PRICE_CACHE_DIR, `${ticker.replaceAll(/[^A-Z0-9.-]/gi, '_')}.json`);
@@ -142,6 +163,7 @@ async function main() {
   if (new Set(strategies.map(strategy => strategy.name)).size !== strategies.length) throw new Error('Every strategy needs a unique name.');
   const term = valueAfter('--search')?.toUpperCase();
   const old = await loadJson(CACHE_PATH, { results: [] });
+  const pairs = candidatePairs(config);
   if (args.has('--search')) {
     const matching = old.results.filter(row => !term || Object.values(row).join(' ').toUpperCase().includes(term));
     console.table(matching);
@@ -157,31 +179,31 @@ async function main() {
   }
   const prior = new Map(old.results.map(row => [`${row.pair}|${row.strategyName ?? 'default'}`, row]));
   const results = [];
-  for (let i = 0; i < config.tickers.length; i++) for (let j = i + 1; j < config.tickers.length; j++) {
-    const a = config.tickers[i], b = config.tickers[j], pair = `${a}/${b}`;
+  for (const candidate of pairs) {
+    const { leftTicker: a, rightTicker: b, pair, relationship } = candidate;
     for (const strategy of strategies) {
       const strategyFingerprint = fingerprint(strategy);
       const cacheKey = `${pair}|${strategy.name}`;
       const cached = prior.get(cacheKey);
       const missing = downloadErrors.get(a) ?? downloadErrors.get(b);
       if (missing) {
-        results.push({ pair, leftTicker: a, rightTicker: b, strategyName: strategy.name, error: missing, qualified: false, profitable: false, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() });
+        results.push({ pair, leftTicker: a, rightTicker: b, relationship, strategyName: strategy.name, error: missing, qualified: false, profitable: false, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() });
         continue;
       }
       if (cached && !cached.profitable && cached.strategyFingerprint === strategyFingerprint && !args.has('--refresh-negatives')) {
-        results.push({ ...cached, reused: true, checkedAt: new Date().toISOString() });
+        results.push({ ...cached, relationship, reused: true, checkedAt: new Date().toISOString() });
         continue;
       }
-      try { results.push({ ...round(testPair(a, b, prices.get(a), prices.get(b), strategy)), strategyName: strategy.name, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() }); }
-      catch (error) { results.push({ pair, leftTicker: a, rightTicker: b, strategyName: strategy.name, error: error.message, profitable: false, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() }); }
+      try { results.push({ ...round(testPair(a, b, prices.get(a), prices.get(b), strategy)), relationship, strategyName: strategy.name, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() }); }
+      catch (error) { results.push({ pair, leftTicker: a, rightTicker: b, relationship, strategyName: strategy.name, error: error.message, profitable: false, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() }); }
     }
   }
   results.sort((a, b) => (b.totalReturn ?? -Infinity) - (a.totalReturn ?? -Infinity));
   const output = { generatedAt: new Date().toISOString(), strategies, results };
   await fs.writeFile(CACHE_PATH, JSON.stringify(output, null, 2));
-  const columns = ['pair', 'strategyName', 'qualified', 'profitable', 'totalReturn', 'maxDrawdown', 'sharpe', 'trades', 'adfTStat', 'hedgeRatioDrift', 'trainingFrom', 'trainingTo', 'testedFrom', 'testedTo', 'reused', 'rejectReason', 'error'];
+  const columns = ['pair', 'relationship', 'strategyName', 'qualified', 'profitable', 'totalReturn', 'maxDrawdown', 'sharpe', 'trades', 'adfTStat', 'hedgeRatioDrift', 'trainingFrom', 'trainingTo', 'testedFrom', 'testedTo', 'reused', 'rejectReason', 'error'];
   await fs.writeFile(CSV_PATH, [columns.join(','), ...results.map(row => columns.map(col => escapeCsv(row[col])).join(','))].join('\n'));
-  console.table(results.filter(row => row.profitable).map(row => ({ pair: row.pair, strategy: row.strategyName, returnPct: `${(row.totalReturn * 100).toFixed(1)}%`, maxDrawdownPct: `${(row.maxDrawdown * 100).toFixed(1)}%`, sharpe: row.sharpe, trades: row.trades })));
-  console.log(`Saved ${results.length} pair-strategy tests. ${results.filter(x => x.profitable).length} met the profitability rule.`);
+  console.table(results.filter(row => row.profitable).map(row => ({ pair: row.pair, relationship: row.relationship, strategy: row.strategyName, returnPct: `${(row.totalReturn * 100).toFixed(1)}%`, maxDrawdownPct: `${(row.maxDrawdown * 100).toFixed(1)}%`, sharpe: row.sharpe, trades: row.trades })));
+  console.log(`Saved ${results.length} pair-strategy tests across ${pairs.length} economically related pairs. ${results.filter(x => x.profitable).length} met the profitability rule.`);
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });

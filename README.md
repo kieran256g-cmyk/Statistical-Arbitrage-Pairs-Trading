@@ -205,6 +205,12 @@ up to ten years of daily history, trains on five years, then tests on a separate
 two years. Daily price downloads are cached under `outputs/price-cache/`; use
 `--refresh-prices` to replace that cache immediately.
 
+By default, `screenMode` is `withinGroups`: only companies that share a named
+group in `pairGroups` are compared. This prevents accidental matches such as a
+chipmaker against a beverage company. A company may belong to more than one
+group, and the results record every shared relationship. Set `screenMode` to
+`all` only when deliberately exploring every possible combination.
+
 ```powershell
 & 'C:\Users\green\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' .\pair_screener.mjs
 ```

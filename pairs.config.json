@@ -9,6 +9,19 @@
     "XOM", "CVX", "COP", "OXY", "MPC", "PSX"
   ],
   "historyYears": 10,
+  "screenMode": "withinGroups",
+  "pairGroups": {
+    "memory and storage": ["MU", "SNDK", "WDC", "STX", "NTAP", "PSTG"],
+    "chip designers": ["NVDA", "AMD", "INTC", "AVGO", "QCOM", "MRVL", "TXN", "ADI", "MCHP", "ON", "MPWR", "NXPI", "SWKS", "CRUS", "COHR"],
+    "chip manufacturing and equipment": ["TSM", "UMC", "GFS", "ASML", "LRCX", "AMAT", "KLAC", "TER"],
+    "data-centre supply chain": ["NVDA", "MU", "AMD", "AVGO", "MRVL", "TSM", "DELL", "HPE", "SMCI", "VRT", "ANET", "CSCO", "ORCL"],
+    "server and networking vendors": ["DELL", "HPE", "SMCI", "VRT", "ANET", "CSCO", "ORCL", "IBM"],
+    "hyperscalers": ["MSFT", "AMZN", "GOOGL", "META"],
+    "beverages": ["KO", "PEP", "KDP", "MNST"],
+    "payments": ["V", "MA", "AXP", "PYPL"],
+    "integrated and upstream energy": ["XOM", "CVX", "COP", "OXY"],
+    "refining": ["MPC", "PSX"]
+  },
   "strategies": [
     {
       "name": "balanced",
