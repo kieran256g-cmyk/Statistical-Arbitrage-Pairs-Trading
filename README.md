@@ -194,6 +194,11 @@ settings have not changed. Profitable results are retested. Use
 `--refresh-negatives` to force all negatives to run again, or `--search MU` to
 search saved results.
 
+Each strategy has separate training and out-of-sample test windows. A pair must
+pass the training residual mean-reversion threshold and hedge-ratio stability
+threshold before its out-of-sample return can qualify. The backtest charges
+costs for both legs on entry and exit and applies an annual short-borrow cost.
+
 ```powershell
 & 'C:\Users\green\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' .\pair_screener.mjs
 ```

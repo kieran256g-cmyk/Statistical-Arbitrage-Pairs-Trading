@@ -36,6 +36,22 @@ function linearFit(x, y) {
   const beta = variance === 0 ? 1 : covariance / variance;
   return { beta, intercept: ym - beta * xm };
 }
+function adfTStat(residuals) {
+  const x = residuals.slice(0, -1);
+  const y = residuals.slice(1).map((value, index) => value - residuals[index]);
+  if (x.length < 10) return null;
+  const fit = linearFit(x, y);
+  const errors = y.map((value, index) => value - (fit.intercept + fit.beta * x[index]));
+  const variance = errors.reduce((sum, value) => sum + value ** 2, 0) / Math.max(1, x.length - 2);
+  const denominator = x.reduce((sum, value) => sum + (value - mean(x)) ** 2, 0);
+  return denominator > 0 ? fit.beta / Math.sqrt(variance / denominator) : null;
+}
+function pairFit(prices) {
+  const x = prices.map(p => Math.log(p[1]));
+  const y = prices.map(p => Math.log(p[0]));
+  const fit = linearFit(x, y);
+  return { ...fit, residuals: prices.map(p => Math.log(p[0]) - (fit.intercept + fit.beta * Math.log(p[1]))) };
+}
 function escapeCsv(value) { return `"${String(value ?? '').replaceAll('"', '""')}"`; }
 function fingerprint(strategy) { return crypto.createHash('sha256').update(JSON.stringify(strategy)).digest('hex'); }
 function strategiesFrom(config) {
@@ -62,20 +78,38 @@ async function getPrices(ticker, years) {
 function testPair(leftTicker, rightTicker, left, right, strategy) {
   const dates = [...left.keys()].filter(date => right.has(date)).sort();
   const prices = dates.map(date => [left.get(date), right.get(date)]);
-  const start = Math.max(strategy.formationDays, dates.length - strategy.backtestDays);
+  const testStart = dates.length - strategy.testDays;
+  const trainingStart = testStart - strategy.trainingDays;
+  if (trainingStart < 0) throw new Error(`Needs ${strategy.trainingDays + strategy.testDays} shared trading days; found ${dates.length}`);
+  const training = prices.slice(trainingStart, testStart);
+  const trainFit = pairFit(training);
+  const midpoint = Math.floor(training.length / 2);
+  const firstBeta = pairFit(training.slice(0, midpoint)).beta;
+  const secondBeta = pairFit(training.slice(midpoint)).beta;
+  const betaDrift = Math.abs(firstBeta - secondBeta) / Math.max(Math.abs(trainFit.beta), 0.01);
+  const adf = adfTStat(trainFit.residuals);
+  const adfPass = adf !== null && adf <= strategy.adfCriticalValue;
+  const stabilityPass = betaDrift <= strategy.maxHedgeRatioDrift;
+  const base = { pair: `${leftTicker}/${rightTicker}`, leftTicker, rightTicker, observations: dates.length, trainingFrom: dates[trainingStart], trainingTo: dates[testStart - 1], testedFrom: dates[testStart], testedTo: dates.at(-1), trainHedgeRatio: trainFit.beta, adfTStat: adf, hedgeRatioDrift: betaDrift, adfPass, stabilityPass, qualified: adfPass && stabilityPass };
+  if (!base.qualified) return { ...base, trades: 0, totalReturn: 0, maxDrawdown: 0, sharpe: 0, profitable: false, rejectReason: !adfPass ? 'training residual did not pass the mean-reversion threshold' : 'training hedge ratio was unstable' };
+  const start = testStart;
   let position = 0, equity = 1, peak = 1, maxDrawdown = 0, trades = 0;
   const dailyReturns = [];
   for (let i = start; i < dates.length; i++) {
     const window = prices.slice(i - strategy.formationDays, i);
+    if (window.length < strategy.formationDays) continue;
     const x = window.map(p => Math.log(p[1])), y = window.map(p => Math.log(p[0]));
     const fit = linearFit(x, y);
     const residuals = window.map(p => Math.log(p[0]) - (fit.intercept + fit.beta * Math.log(p[1])));
     const z = (Math.log(prices[i][0]) - (fit.intercept + fit.beta * Math.log(prices[i][1])) - mean(residuals)) / std(residuals);
     const previous = prices[i - 1];
     const longReturn = (prices[i][0] / previous[0] - 1) - fit.beta * (prices[i][1] / previous[1] - 1);
-    let returned = position * longReturn / (1 + Math.abs(fit.beta));
+    const gross = 1 + Math.abs(fit.beta);
+    let returned = position * longReturn / gross;
+    const shortWeight = position > 0 ? Math.abs(fit.beta) / gross : 1 / gross;
+    if (position !== 0) returned -= (strategy.shortBorrowBpsAnnual / 10000 / 252) * shortWeight;
     const nextPosition = position === 0 ? (z >= strategy.entryZ ? -1 : z <= -strategy.entryZ ? 1 : 0) : (Math.abs(z) <= strategy.exitZ ? 0 : position);
-    if (nextPosition !== position) { returned -= strategy.costBps / 10000; if (nextPosition !== 0) trades++; }
+    if (nextPosition !== position) { returned -= (strategy.costBpsPerLeg / 10000) * 2; if (nextPosition !== 0) trades++; }
     position = nextPosition;
     equity *= 1 + returned;
     peak = Math.max(peak, equity); maxDrawdown = Math.min(maxDrawdown, equity / peak - 1);
@@ -85,11 +119,11 @@ function testPair(leftTicker, rightTicker, left, right, strategy) {
   const sharpe = volatility ? mean(dailyReturns) / volatility * Math.sqrt(252) : 0;
   const totalReturn = equity - 1;
   const profitable = totalReturn > 0 && trades >= strategy.minTrades;
-  return { pair: `${leftTicker}/${rightTicker}`, leftTicker, rightTicker, observations: dates.length, testedFrom: dates[start], testedTo: dates.at(-1), trades, totalReturn, maxDrawdown, sharpe, profitable };
+  return { ...base, trades, totalReturn, maxDrawdown, sharpe, profitable, rejectReason: profitable ? null : 'out-of-sample return or minimum-trade requirement failed' };
 }
 
 async function loadJson(file, fallback) { try { return JSON.parse(await fs.readFile(file, 'utf8')); } catch { return fallback; } }
-function round(result) { for (const key of ['totalReturn', 'maxDrawdown', 'sharpe']) result[key] = Number(result[key].toFixed(4)); return result; }
+function round(result) { for (const key of ['totalReturn', 'maxDrawdown', 'sharpe', 'trainHedgeRatio', 'adfTStat', 'hedgeRatioDrift']) if (Number.isFinite(result[key])) result[key] = Number(result[key].toFixed(4)); return result; }
 
 async function main() {
   const config = await loadJson(CONFIG_PATH, null);
@@ -125,7 +159,7 @@ async function main() {
   results.sort((a, b) => (b.totalReturn ?? -Infinity) - (a.totalReturn ?? -Infinity));
   const output = { generatedAt: new Date().toISOString(), strategies, results };
   await fs.writeFile(CACHE_PATH, JSON.stringify(output, null, 2));
-  const columns = ['pair', 'strategyName', 'profitable', 'totalReturn', 'maxDrawdown', 'sharpe', 'trades', 'observations', 'testedFrom', 'testedTo', 'reused', 'error'];
+  const columns = ['pair', 'strategyName', 'qualified', 'profitable', 'totalReturn', 'maxDrawdown', 'sharpe', 'trades', 'adfTStat', 'hedgeRatioDrift', 'trainingFrom', 'trainingTo', 'testedFrom', 'testedTo', 'reused', 'rejectReason', 'error'];
   await fs.writeFile(CSV_PATH, [columns.join(','), ...results.map(row => columns.map(col => escapeCsv(row[col])).join(','))].join('\n'));
   console.table(results.filter(row => row.profitable).map(row => ({ pair: row.pair, strategy: row.strategyName, returnPct: `${(row.totalReturn * 100).toFixed(1)}%`, maxDrawdownPct: `${(row.maxDrawdown * 100).toFixed(1)}%`, sharpe: row.sharpe, trades: row.trades })));
   console.log(`Saved ${results.length} pair-strategy tests. ${results.filter(x => x.profitable).length} met the profitability rule.`);

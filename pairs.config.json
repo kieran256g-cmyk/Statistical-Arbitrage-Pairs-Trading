@@ -5,20 +5,28 @@
     {
       "name": "balanced",
       "formationDays": 120,
-      "backtestDays": 252,
+      "trainingDays": 252,
+      "testDays": 252,
       "entryZ": 2,
       "exitZ": 0.5,
-      "costBps": 10,
-      "minTrades": 3
+      "costBpsPerLeg": 10,
+      "shortBorrowBpsAnnual": 50,
+      "minTrades": 5,
+      "adfCriticalValue": -3.34,
+      "maxHedgeRatioDrift": 0.35
     },
     {
       "name": "selective",
       "formationDays": 180,
-      "backtestDays": 252,
+      "trainingDays": 252,
+      "testDays": 252,
       "entryZ": 2.5,
       "exitZ": 0.5,
-      "costBps": 10,
-      "minTrades": 2
+      "costBpsPerLeg": 10,
+      "shortBorrowBpsAnnual": 50,
+      "minTrades": 4,
+      "adfCriticalValue": -3.34,
+      "maxHedgeRatioDrift": 0.35
     }
   ]
 }
