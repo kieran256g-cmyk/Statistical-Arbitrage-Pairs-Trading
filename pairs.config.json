@@ -1,12 +1,20 @@
 {
-  "tickers": ["NVDA", "MU", "SNDK", "DELL", "WDC", "STX", "AMD", "INTC", "AVGO", "SMCI"],
-  "historyYears": 3,
+  "tickers": [
+    "NVDA", "MU", "SNDK", "DELL", "WDC", "STX", "AMD", "INTC", "AVGO", "SMCI",
+    "QCOM", "MRVL", "TXN", "ADI", "MCHP", "ON", "MPWR", "LRCX", "AMAT", "KLAC",
+    "TER", "TSM", "ASML", "UMC", "GFS", "NXPI", "SWKS", "CRUS", "COHR",
+    "HPE", "NTAP", "PSTG", "VRT", "ANET", "CSCO", "ORCL", "IBM",
+    "MSFT", "AMZN", "GOOGL", "META",
+    "KO", "PEP", "KDP", "MNST", "V", "MA", "AXP", "PYPL",
+    "XOM", "CVX", "COP", "OXY", "MPC", "PSX"
+  ],
+  "historyYears": 10,
   "strategies": [
     {
       "name": "balanced",
-      "formationDays": 120,
-      "trainingDays": 252,
-      "testDays": 252,
+      "formationDays": 252,
+      "trainingDays": 1260,
+      "testDays": 504,
       "entryZ": 2,
       "exitZ": 0.5,
       "costBpsPerLeg": 10,
@@ -17,9 +25,9 @@
     },
     {
       "name": "selective",
-      "formationDays": 180,
-      "trainingDays": 252,
-      "testDays": 252,
+      "formationDays": 378,
+      "trainingDays": 1260,
+      "testDays": 504,
       "entryZ": 2.5,
       "exitZ": 0.5,
       "costBpsPerLeg": 10,

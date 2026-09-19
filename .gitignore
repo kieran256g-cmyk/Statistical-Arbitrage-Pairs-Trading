@@ -1,5 +1,6 @@
 outputs/pair-results.json
 outputs/pair-results.csv
+outputs/price-cache/
 __pycache__/
 *.py[cod]
 .venv/

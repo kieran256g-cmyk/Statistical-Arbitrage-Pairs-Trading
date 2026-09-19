@@ -14,6 +14,7 @@ const OUTPUT = path.join(ROOT, 'outputs');
 const CONFIG_PATH = path.join(ROOT, 'pairs.config.json');
 const CACHE_PATH = path.join(OUTPUT, 'pair-results.json');
 const CSV_PATH = path.join(OUTPUT, 'pair-results.csv');
+const PRICE_CACHE_DIR = path.join(OUTPUT, 'price-cache');
 
 const args = new Set(process.argv.slice(2));
 const valueAfter = (name) => {
@@ -61,17 +62,26 @@ function strategiesFrom(config) {
 }
 
 async function getPrices(ticker, years) {
+  const cacheFile = path.join(PRICE_CACHE_DIR, `${ticker.replaceAll(/[^A-Z0-9.-]/gi, '_')}.json`);
+  const cached = await loadJson(cacheFile, null);
+  const today = new Date().toISOString().slice(0, 10);
+  if (cached?.asOf === today && cached.historyYears >= years && !args.has('--refresh-prices')) return new Map(cached.rows);
   const end = Math.floor(Date.now() / 1000);
   const start = end - years * 366 * 86400;
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?period1=${start}&period2=${end}&interval=1d&events=history&includeAdjustedClose=true`;
   const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 pair-screener/1.0' } });
-  if (!response.ok) throw new Error(`${ticker}: price download returned ${response.status}`);
+  if (!response.ok) {
+    if (cached?.rows) return new Map(cached.rows);
+    throw new Error(`${ticker}: price download returned ${response.status}`);
+  }
   const json = await response.json();
   const item = json.chart?.result?.[0];
   if (!item) throw new Error(`${ticker}: price data was empty`);
   const adjusted = item.indicators?.adjclose?.[0]?.adjclose ?? item.indicators?.quote?.[0]?.close;
   const rows = new Map();
   item.timestamp.forEach((time, i) => { if (number(adjusted[i]) && adjusted[i] > 0) rows.set(toDate(time), adjusted[i]); });
+  await fs.mkdir(PRICE_CACHE_DIR, { recursive: true });
+  await fs.writeFile(cacheFile, JSON.stringify({ ticker, asOf: today, historyYears: years, rows: [...rows] }));
   return rows;
 }
 
@@ -139,7 +149,12 @@ async function main() {
   }
   await fs.mkdir(OUTPUT, { recursive: true });
   const prices = new Map();
-  for (const ticker of config.tickers) { process.stdout.write(`Downloading ${ticker}...\n`); prices.set(ticker, await getPrices(ticker, config.historyYears)); }
+  const downloadErrors = new Map();
+  for (const ticker of config.tickers) {
+    process.stdout.write(`Downloading ${ticker}...\n`);
+    try { prices.set(ticker, await getPrices(ticker, config.historyYears)); }
+    catch (error) { downloadErrors.set(ticker, error.message); console.warn(`Skipping ${ticker}: ${error.message}`); }
+  }
   const prior = new Map(old.results.map(row => [`${row.pair}|${row.strategyName ?? 'default'}`, row]));
   const results = [];
   for (let i = 0; i < config.tickers.length; i++) for (let j = i + 1; j < config.tickers.length; j++) {
@@ -148,6 +163,11 @@ async function main() {
       const strategyFingerprint = fingerprint(strategy);
       const cacheKey = `${pair}|${strategy.name}`;
       const cached = prior.get(cacheKey);
+      const missing = downloadErrors.get(a) ?? downloadErrors.get(b);
+      if (missing) {
+        results.push({ pair, leftTicker: a, rightTicker: b, strategyName: strategy.name, error: missing, qualified: false, profitable: false, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() });
+        continue;
+      }
       if (cached && !cached.profitable && cached.strategyFingerprint === strategyFingerprint && !args.has('--refresh-negatives')) {
         results.push({ ...cached, reused: true, checkedAt: new Date().toISOString() });
         continue;

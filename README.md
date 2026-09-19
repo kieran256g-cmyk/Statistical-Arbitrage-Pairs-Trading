@@ -199,6 +199,12 @@ pass the training residual mean-reversion threshold and hedge-ratio stability
 threshold before its out-of-sample return can qualify. The backtest charges
 costs for both legs on entry and exit and applies an annual short-borrow cost.
 
+The included universe covers memory, storage, semiconductors, networking,
+servers, hyperscalers, beverages, payments and energy. The screener downloads
+up to ten years of daily history, trains on five years, then tests on a separate
+two years. Daily price downloads are cached under `outputs/price-cache/`; use
+`--refresh-prices` to replace that cache immediately.
+
 ```powershell
 & 'C:\Users\green\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' .\pair_screener.mjs
 ```
