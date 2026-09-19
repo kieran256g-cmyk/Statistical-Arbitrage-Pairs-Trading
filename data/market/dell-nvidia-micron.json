@@ -1,0 +1,28 @@
+{
+  "pair": "dell-nvidia-micron",
+  "pair_name": "Dell / NVIDIA + Micron basket",
+  "asset_a": "DELL",
+  "asset_b": "NVDA+MU",
+  "source": "Yahoo Finance adjusted daily closes: DELL / NVDA+MU",
+  "price_basis": "split- and distribution-adjusted close; total-return proxy, not executable prices",
+  "currency": "USD",
+  "downloaded_at_utc": "2026-09-16T21:10:00.914843+00:00",
+  "requested_start": "2023-01-01",
+  "requested_end_exclusive": "2026-09-16",
+  "first_date": "2023-01-03",
+  "last_date": "2026-09-15",
+  "rows": 928,
+  "source_urls": [
+    "https://query1.finance.yahoo.com/v8/finance/chart/DELL?period1=1672531200&period2=1789516800&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+    "https://query1.finance.yahoo.com/v8/finance/chart/NVDA?period1=1672531200&period2=1789516800&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+    "https://query1.finance.yahoo.com/v8/finance/chart/MU?period1=1672531200&period2=1789516800&interval=1d&events=div%2Csplits&includeAdjustedClose=true"
+  ],
+  "basket_shares_per_unit": {
+    "NVDA": 3.504517642538639,
+    "MU": 1.007668759646876
+  },
+  "basket_rule": "50/50 dollars on first shared date, fixed adjusted-share coefficients thereafter",
+  "unmatched_dates_dropped": 0,
+  "alignment": "intersection of available dates; no forward filling",
+  "csv_sha256": "dfd9f51735a26c924d5e75ff2765212438dde5577ca7055280f59aeb55a391ab"
+}

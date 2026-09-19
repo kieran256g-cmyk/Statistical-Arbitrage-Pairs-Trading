@@ -1,0 +1,10 @@
+{
+  "symbol": "KDP",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/KDP?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.319385+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 929,
+  "csv_sha256": "b6a1826a14768c295ed510af63d2ef566ba684f962b693ec8ff5d698540a9921"
+}

@@ -1,0 +1,10 @@
+{
+  "symbol": "PYPL",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/PYPL?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.356393+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 929,
+  "csv_sha256": "b258ad48726122fc242ace39f73d74f63c432377938fb5b7c6a677fb6ad394b1"
+}

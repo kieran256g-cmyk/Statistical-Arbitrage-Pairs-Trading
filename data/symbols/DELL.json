@@ -1,0 +1,10 @@
+{
+  "symbol": "DELL",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/DELL?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.311887+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 929,
+  "csv_sha256": "8c1f771183afe50944dbacd323dbe20658b04f1e9f90b652623fd8e077ef7a00"
+}

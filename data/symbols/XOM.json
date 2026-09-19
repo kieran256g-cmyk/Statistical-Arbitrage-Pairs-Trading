@@ -1,0 +1,10 @@
+{
+  "symbol": "XOM",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/XOM?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.387393+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 929,
+  "csv_sha256": "1cb0e0f40103504587fd1ec145afdc9c5728bed8b42d8d14182f3656b7008c29"
+}

@@ -1,0 +1,10 @@
+{
+  "symbol": "STX",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/STX?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.367892+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 929,
+  "csv_sha256": "305b0126953d35c4e3f5be3d8f1462a3cc2ec7ea8b6141af981540e4f2195f5b"
+}

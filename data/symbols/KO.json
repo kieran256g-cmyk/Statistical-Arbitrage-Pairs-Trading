@@ -1,0 +1,10 @@
+{
+  "symbol": "KO",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/KO?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.326388+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 929,
+  "csv_sha256": "19813c8a307b5254779450600ed74194dc5d7c2cdf885bf84234fc1b3d782f20"
+}

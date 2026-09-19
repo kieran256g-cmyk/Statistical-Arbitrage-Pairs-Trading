@@ -1,2 +1,15 @@
 outputs/pair-results.json
 outputs/pair-results.csv
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+results/
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

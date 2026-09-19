@@ -1,0 +1,10 @@
+{
+  "symbol": "WDC",
+  "currency": "USD",
+  "source": "Yahoo Finance",
+  "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/WDC?period1=1672531200&period2=1789603200&interval=1d&events=div%2Csplits&includeAdjustedClose=true",
+  "downloaded_at_utc": "2026-09-17T18:57:39.380392+00:00",
+  "requested_end_exclusive": "2026-09-17",
+  "rows": 929,
+  "csv_sha256": "94d4c6d18b9daa531ddd377bb89a64ff234916c1e07ebcd578ba8c297af9777a"
+}
