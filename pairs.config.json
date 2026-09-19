@@ -1,0 +1,24 @@
+{
+  "tickers": ["NVDA", "MU", "SNDK", "DELL", "WDC", "STX", "AMD", "INTC", "AVGO", "SMCI"],
+  "historyYears": 3,
+  "strategies": [
+    {
+      "name": "balanced",
+      "formationDays": 120,
+      "backtestDays": 252,
+      "entryZ": 2,
+      "exitZ": 0.5,
+      "costBps": 10,
+      "minTrades": 3
+    },
+    {
+      "name": "selective",
+      "formationDays": 180,
+      "backtestDays": 252,
+      "entryZ": 2.5,
+      "exitZ": 0.5,
+      "costBps": 10,
+      "minTrades": 2
+    }
+  ]
+}
