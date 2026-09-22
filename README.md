@@ -211,6 +211,13 @@ chipmaker against a beverage company. A company may belong to more than one
 group, and the results record every shared relationship. Set `screenMode` to
 `all` only when deliberately exploring every possible combination.
 
+The six default groups contain about 30 companies each: semiconductors and
+equipment, data-centre and networking, financials and payments, energy,
+consumer staples and beverages, and industrials and transport. Every qualified
+pair-strategy result receives a 0–100 quality score that combines out-of-sample
+return, Sharpe ratio, drawdown, trade count, training mean-reversion strength,
+and hedge-ratio stability. It is a ranking aid, not a trading recommendation.
+
 ```powershell
 & 'C:\Users\green\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' .\pair_screener.mjs
 ```

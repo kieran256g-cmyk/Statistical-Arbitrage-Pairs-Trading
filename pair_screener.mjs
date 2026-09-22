@@ -155,6 +155,17 @@ function testPair(leftTicker, rightTicker, left, right, strategy) {
 
 async function loadJson(file, fallback) { try { return JSON.parse(await fs.readFile(file, 'utf8')); } catch { return fallback; } }
 function round(result) { for (const key of ['totalReturn', 'maxDrawdown', 'sharpe', 'trainHedgeRatio', 'adfTStat', 'hedgeRatioDrift']) if (Number.isFinite(result[key])) result[key] = Number(result[key].toFixed(4)); return result; }
+function qualityScore(result, strategy) {
+  if (!result.qualified) return 0;
+  const bounded = (value) => Math.max(0, Math.min(1, value));
+  const adf = bounded(((-result.adfTStat) - (-strategy.adfCriticalValue)) / 2) * 20;
+  const stability = bounded(1 - result.hedgeRatioDrift / strategy.maxHedgeRatioDrift) * 15;
+  const returnScore = bounded(result.totalReturn / 0.3) * 20;
+  const sharpe = bounded(result.sharpe / 1.5) * 20;
+  const drawdown = bounded(1 + result.maxDrawdown / 0.3) * 10;
+  const tradeCount = bounded(result.trades / 10) * 15;
+  return Number((adf + stability + returnScore + sharpe + drawdown + tradeCount).toFixed(1));
+}
 
 async function main() {
   const config = await loadJson(CONFIG_PATH, null);
@@ -194,16 +205,20 @@ async function main() {
         results.push({ ...cached, relationship, reused: true, checkedAt: new Date().toISOString() });
         continue;
       }
-      try { results.push({ ...round(testPair(a, b, prices.get(a), prices.get(b), strategy)), relationship, strategyName: strategy.name, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() }); }
+      try {
+        const result = round(testPair(a, b, prices.get(a), prices.get(b), strategy));
+        results.push({ ...result, relationship, qualityScore: qualityScore(result, strategy), strategyName: strategy.name, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() });
+      }
       catch (error) { results.push({ pair, leftTicker: a, rightTicker: b, relationship, strategyName: strategy.name, error: error.message, profitable: false, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() }); }
     }
   }
-  results.sort((a, b) => (b.totalReturn ?? -Infinity) - (a.totalReturn ?? -Infinity));
+  for (const row of results) if (!Number.isFinite(row.qualityScore)) row.qualityScore = qualityScore(row, strategies.find(strategy => strategy.name === row.strategyName) ?? {});
+  results.sort((a, b) => (b.qualityScore ?? -Infinity) - (a.qualityScore ?? -Infinity));
   const output = { generatedAt: new Date().toISOString(), strategies, results };
   await fs.writeFile(CACHE_PATH, JSON.stringify(output, null, 2));
-  const columns = ['pair', 'relationship', 'strategyName', 'qualified', 'profitable', 'totalReturn', 'maxDrawdown', 'sharpe', 'trades', 'adfTStat', 'hedgeRatioDrift', 'trainingFrom', 'trainingTo', 'testedFrom', 'testedTo', 'reused', 'rejectReason', 'error'];
+  const columns = ['pair', 'relationship', 'strategyName', 'qualityScore', 'qualified', 'profitable', 'totalReturn', 'maxDrawdown', 'sharpe', 'trades', 'adfTStat', 'hedgeRatioDrift', 'trainingFrom', 'trainingTo', 'testedFrom', 'testedTo', 'reused', 'rejectReason', 'error'];
   await fs.writeFile(CSV_PATH, [columns.join(','), ...results.map(row => columns.map(col => escapeCsv(row[col])).join(','))].join('\n'));
-  console.table(results.filter(row => row.profitable).map(row => ({ pair: row.pair, relationship: row.relationship, strategy: row.strategyName, returnPct: `${(row.totalReturn * 100).toFixed(1)}%`, maxDrawdownPct: `${(row.maxDrawdown * 100).toFixed(1)}%`, sharpe: row.sharpe, trades: row.trades })));
+  console.table(results.filter(row => row.profitable).map(row => ({ pair: row.pair, relationship: row.relationship, score: row.qualityScore, strategy: row.strategyName, returnPct: `${(row.totalReturn * 100).toFixed(1)}%`, maxDrawdownPct: `${(row.maxDrawdown * 100).toFixed(1)}%`, sharpe: row.sharpe, trades: row.trades })));
   console.log(`Saved ${results.length} pair-strategy tests across ${pairs.length} economically related pairs. ${results.filter(x => x.profitable).length} met the profitability rule.`);
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });

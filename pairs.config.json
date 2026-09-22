@@ -1,26 +1,21 @@
 {
   "tickers": [
-    "NVDA", "MU", "SNDK", "DELL", "WDC", "STX", "AMD", "INTC", "AVGO", "SMCI",
-    "QCOM", "MRVL", "TXN", "ADI", "MCHP", "ON", "MPWR", "LRCX", "AMAT", "KLAC",
-    "TER", "TSM", "ASML", "UMC", "GFS", "NXPI", "SWKS", "CRUS", "COHR",
-    "HPE", "NTAP", "PSTG", "VRT", "ANET", "CSCO", "ORCL", "IBM",
-    "MSFT", "AMZN", "GOOGL", "META",
-    "KO", "PEP", "KDP", "MNST", "V", "MA", "AXP", "PYPL",
-    "XOM", "CVX", "COP", "OXY", "MPC", "PSX"
+    "NVDA", "AMD", "INTC", "AVGO", "QCOM", "MRVL", "TXN", "ADI", "MCHP", "ON", "MPWR", "NXPI", "SWKS", "CRUS", "COHR", "TSM", "UMC", "GFS", "ASML", "LRCX", "AMAT", "KLAC", "TER", "ENTG", "OLED", "SLAB", "SMTC", "SITM", "PI", "RMBS",
+    "MU", "SNDK", "WDC", "STX", "NTAP", "DELL", "HPE", "SMCI", "VRT", "ANET", "CSCO", "ORCL", "IBM", "MSFT", "AMZN", "GOOGL", "META", "EQIX", "DLR", "FFIV", "CIEN", "LUMN", "AKAM", "CRDO", "GLW", "CLS", "SANM", "FLEX", "APH", "TEL",
+    "V", "MA", "AXP", "PYPL", "COF", "SOFI", "XYZ", "AFRM", "HOOD", "IBKR", "CME", "ICE", "CBOE", "NDAQ", "SPGI", "MCO", "MSCI", "FDS", "JPM", "BAC", "WFC", "C", "GS", "MS", "USB", "PNC", "TFC", "SCHW", "RJF", "AON",
+    "XOM", "CVX", "COP", "OXY", "EOG", "DVN", "FANG", "APA", "EQT", "AR", "RRC", "OVV", "LNG", "KMI", "WMB", "TRGP", "OKE", "ET", "MPLX", "PAA", "PSX", "MPC", "VLO", "DK", "SUN", "HAL", "SLB", "BKR", "NOV", "FTI",
+    "KO", "PEP", "KDP", "MNST", "PM", "MO", "BTI", "UL", "PG", "CL", "KMB", "CHD", "CLX", "SJM", "HSY", "MDLZ", "GIS", "KHC", "HRL", "CAG", "CPB", "TSN", "MKC", "STZ", "TAP", "SAM", "BF-B", "DEO", "FIZZ", "CELH",
+    "CAT", "DE", "HON", "GE", "ETN", "EMR", "ROK", "PH", "CMI", "PCAR", "WAB", "URI", "FAST", "GWW", "ITW", "DOV", "ROP", "TDG", "RTX", "LMT", "NOC", "GD", "BA", "UPS", "FDX", "UNP", "CSX", "NSC", "JBHT", "ODFL"
   ],
   "historyYears": 10,
   "screenMode": "withinGroups",
   "pairGroups": {
-    "memory and storage": ["MU", "SNDK", "WDC", "STX", "NTAP", "PSTG"],
-    "chip designers": ["NVDA", "AMD", "INTC", "AVGO", "QCOM", "MRVL", "TXN", "ADI", "MCHP", "ON", "MPWR", "NXPI", "SWKS", "CRUS", "COHR"],
-    "chip manufacturing and equipment": ["TSM", "UMC", "GFS", "ASML", "LRCX", "AMAT", "KLAC", "TER"],
-    "data-centre supply chain": ["NVDA", "MU", "AMD", "AVGO", "MRVL", "TSM", "DELL", "HPE", "SMCI", "VRT", "ANET", "CSCO", "ORCL"],
-    "server and networking vendors": ["DELL", "HPE", "SMCI", "VRT", "ANET", "CSCO", "ORCL", "IBM"],
-    "hyperscalers": ["MSFT", "AMZN", "GOOGL", "META"],
-    "beverages": ["KO", "PEP", "KDP", "MNST"],
-    "payments": ["V", "MA", "AXP", "PYPL"],
-    "integrated and upstream energy": ["XOM", "CVX", "COP", "OXY"],
-    "refining": ["MPC", "PSX"]
+    "semiconductors and equipment": ["NVDA", "AMD", "INTC", "AVGO", "QCOM", "MRVL", "TXN", "ADI", "MCHP", "ON", "MPWR", "NXPI", "SWKS", "CRUS", "COHR", "TSM", "UMC", "GFS", "ASML", "LRCX", "AMAT", "KLAC", "TER", "ENTG", "OLED", "SLAB", "SMTC", "SITM", "PI", "RMBS"],
+    "data-centre and networking": ["MU", "SNDK", "WDC", "STX", "NTAP", "DELL", "HPE", "SMCI", "VRT", "ANET", "CSCO", "ORCL", "IBM", "MSFT", "AMZN", "GOOGL", "META", "EQIX", "DLR", "FFIV", "CIEN", "LUMN", "AKAM", "CRDO", "GLW", "CLS", "SANM", "FLEX", "APH", "TEL"],
+    "financials and payments": ["V", "MA", "AXP", "PYPL", "COF", "SOFI", "XYZ", "AFRM", "HOOD", "IBKR", "CME", "ICE", "CBOE", "NDAQ", "SPGI", "MCO", "MSCI", "FDS", "JPM", "BAC", "WFC", "C", "GS", "MS", "USB", "PNC", "TFC", "SCHW", "RJF", "AON"],
+    "energy": ["XOM", "CVX", "COP", "OXY", "EOG", "DVN", "FANG", "APA", "EQT", "AR", "RRC", "OVV", "LNG", "KMI", "WMB", "TRGP", "OKE", "ET", "MPLX", "PAA", "PSX", "MPC", "VLO", "DK", "SUN", "HAL", "SLB", "BKR", "NOV", "FTI"],
+    "consumer staples and beverages": ["KO", "PEP", "KDP", "MNST", "PM", "MO", "BTI", "UL", "PG", "CL", "KMB", "CHD", "CLX", "SJM", "HSY", "MDLZ", "GIS", "KHC", "HRL", "CAG", "CPB", "TSN", "MKC", "STZ", "TAP", "SAM", "BF-B", "DEO", "FIZZ", "CELH"],
+    "industrials and transport": ["CAT", "DE", "HON", "GE", "ETN", "EMR", "ROK", "PH", "CMI", "PCAR", "WAB", "URI", "FAST", "GWW", "ITW", "DOV", "ROP", "TDG", "RTX", "LMT", "NOC", "GD", "BA", "UPS", "FDX", "UNP", "CSX", "NSC", "JBHT", "ODFL"]
   },
   "strategies": [
     {
