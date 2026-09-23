@@ -211,6 +211,38 @@ chipmaker against a beverage company. A company may belong to more than one
 group, and the results record every shared relationship. Set `screenMode` to
 `all` only when deliberately exploring every possible combination.
 
+## Add a completely new strategy
+
+Each Node screener strategy is a small file in `pair_strategies/`. Copy
+`pair_strategies/template.mjs`, rename the copy, and change its `signal`
+function. The function receives the current z-score, spread, hedge ratio,
+current and previous prices, prior position, date, and every setting from the
+matching entry in `pairs.config.json`. It must return `1` (long the left ticker,
+short the right), `-1` (short the left ticker, long the right), or `0` (flat).
+
+Then add a configuration entry such as:
+
+```json
+{
+  "name": "my-new-strategy",
+  "plugin": "my_strategy",
+  "formationDays": 252,
+  "trainingDays": 1260,
+  "testDays": 504,
+  "entryZ": 2.5,
+  "exitZ": 0.75,
+  "costBpsPerLeg": 10,
+  "shortBorrowBpsAnnual": 50,
+  "minTrades": 4,
+  "adfCriticalValue": -3.34,
+  "maxHedgeRatioDrift": 0.35
+}
+```
+
+`plugin` uses the filename without `.mjs`. The included `mean_reversion` and
+`momentum_spread` plugins are working examples. Changing either the strategy
+settings or its plugin file automatically invalidates its old cached results.
+
 The six default groups contain about 30 companies each: semiconductors and
 equipment, data-centre and networking, financials and payments, energy,
 consumer staples and beverages, and industrials and transport. Every qualified

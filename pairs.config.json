@@ -20,6 +20,7 @@
   "strategies": [
     {
       "name": "balanced",
+      "plugin": "mean_reversion",
       "formationDays": 252,
       "trainingDays": 1260,
       "testDays": 504,
@@ -33,11 +34,26 @@
     },
     {
       "name": "selective",
+      "plugin": "mean_reversion",
       "formationDays": 378,
       "trainingDays": 1260,
       "testDays": 504,
       "entryZ": 2.5,
       "exitZ": 0.5,
+      "costBpsPerLeg": 10,
+      "shortBorrowBpsAnnual": 50,
+      "minTrades": 4,
+      "adfCriticalValue": -3.34,
+      "maxHedgeRatioDrift": 0.35
+    },
+    {
+      "name": "momentum-spread",
+      "plugin": "momentum_spread",
+      "formationDays": 252,
+      "trainingDays": 1260,
+      "testDays": 504,
+      "entryZ": 2.5,
+      "exitZ": 0.75,
       "costBpsPerLeg": 10,
       "shortBorrowBpsAnnual": 50,
       "minTrades": 4,

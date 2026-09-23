@@ -7,7 +7,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT = path.join(ROOT, 'outputs');
@@ -15,6 +15,7 @@ const CONFIG_PATH = path.join(ROOT, 'pairs.config.json');
 const CACHE_PATH = path.join(OUTPUT, 'pair-results.json');
 const CSV_PATH = path.join(OUTPUT, 'pair-results.csv');
 const PRICE_CACHE_DIR = path.join(OUTPUT, 'price-cache');
+const STRATEGY_DIR = path.join(ROOT, 'pair_strategies');
 
 const args = new Set(process.argv.slice(2));
 const valueAfter = (name) => {
@@ -54,11 +55,27 @@ function pairFit(prices) {
   return { ...fit, residuals: prices.map(p => Math.log(p[0]) - (fit.intercept + fit.beta * Math.log(p[1]))) };
 }
 function escapeCsv(value) { return `"${String(value ?? '').replaceAll('"', '""')}"`; }
-function fingerprint(strategy) { return crypto.createHash('sha256').update(JSON.stringify(strategy)).digest('hex'); }
+function fingerprint(strategy) {
+  const { signal, pluginMetadata, ...serializable } = strategy;
+  return crypto.createHash('sha256').update(JSON.stringify(serializable)).digest('hex');
+}
 function strategiesFrom(config) {
-  if (Array.isArray(config.strategies) && config.strategies.length) return config.strategies;
-  if (config.strategy) return [{ name: 'default', ...config.strategy }];
+  if (Array.isArray(config.strategies) && config.strategies.length) return config.strategies.map(strategy => ({ plugin: 'mean_reversion', ...strategy }));
+  if (config.strategy) return [{ name: 'default', plugin: 'mean_reversion', ...config.strategy }];
   throw new Error('Configure at least one strategy in the strategies array.');
+}
+async function loadStrategies(configStrategies) {
+  return Promise.all(configStrategies.map(async (strategy) => {
+    if (!/^[a-z0-9_]+$/i.test(strategy.plugin)) throw new Error(`Invalid strategy plugin name: ${strategy.plugin}`);
+    const pluginFile = path.join(STRATEGY_DIR, `${strategy.plugin}.mjs`);
+    let source;
+    try { source = await fs.readFile(pluginFile, 'utf8'); }
+    catch { throw new Error(`Strategy plugin not found: ${pluginFile}`); }
+    const pluginHash = crypto.createHash('sha256').update(source).digest('hex');
+    const plugin = await import(`${pathToFileURL(pluginFile).href}?version=${pluginHash}`);
+    if (typeof plugin.signal !== 'function') throw new Error(`${strategy.plugin} must export a signal(context) function.`);
+    return { ...strategy, signal: plugin.signal, pluginHash, pluginMetadata: plugin.metadata ?? {} };
+  }));
 }
 function candidatePairs(config) {
   const order = new Map(config.tickers.map((ticker, index) => [ticker, index]));
@@ -139,7 +156,12 @@ function testPair(leftTicker, rightTicker, left, right, strategy) {
     let returned = position * longReturn / gross;
     const shortWeight = position > 0 ? Math.abs(fit.beta) / gross : 1 / gross;
     if (position !== 0) returned -= (strategy.shortBorrowBpsAnnual / 10000 / 252) * shortWeight;
-    const nextPosition = position === 0 ? (z >= strategy.entryZ ? -1 : z <= -strategy.entryZ ? 1 : 0) : (Math.abs(z) <= strategy.exitZ ? 0 : position);
+    const nextPosition = strategy.signal({
+      date: dates[i], z, spread: Math.log(prices[i][0]) - (fit.intercept + fit.beta * Math.log(prices[i][1])),
+      hedgeRatio: fit.beta, previousPosition: position, leftPrice: prices[i][0], rightPrice: prices[i][1],
+      leftPreviousPrice: previous[0], rightPreviousPrice: previous[1], settings: strategy
+    });
+    if (![-1, 0, 1].includes(nextPosition)) throw new Error(`${strategy.plugin} returned ${nextPosition}; a strategy must return -1, 0, or 1.`);
     if (nextPosition !== position) { returned -= (strategy.costBpsPerLeg / 10000) * 2; if (nextPosition !== 0) trades++; }
     position = nextPosition;
     equity *= 1 + returned;
@@ -170,7 +192,7 @@ function qualityScore(result, strategy) {
 async function main() {
   const config = await loadJson(CONFIG_PATH, null);
   if (!config) throw new Error(`Missing ${CONFIG_PATH}`);
-  const strategies = strategiesFrom(config);
+  const strategies = await loadStrategies(strategiesFrom(config));
   if (new Set(strategies.map(strategy => strategy.name)).size !== strategies.length) throw new Error('Every strategy needs a unique name.');
   const term = valueAfter('--search')?.toUpperCase();
   const old = await loadJson(CACHE_PATH, { results: [] });
