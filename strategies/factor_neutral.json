@@ -1,0 +1,11 @@
+{
+  "description": "Trades a pair after removing its configured market or sector ETF factor.",
+  "lookback": 60,
+  "entry_z": 2.0,
+  "exit_z": 0.5,
+  "stop_z": 4.0,
+  "screener": {
+    "scoreField": "factorZ",
+    "highScoreSide": -1
+  }
+}

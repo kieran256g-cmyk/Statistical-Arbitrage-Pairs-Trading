@@ -18,7 +18,7 @@ from pairs_trading.config import Config
 from pairs_trading.data import make_demo
 from pairs_trading.groups import build_baskets, choose_group, load_groups, load_selection, validate_selection
 from pairs_trading.plugins import available_strategies, load_strategy, strategy_config
-from pairs_trading.strategy import Signal
+from pairs_trading.signals import Signal
 
 
 class CustomizationTests(unittest.TestCase):

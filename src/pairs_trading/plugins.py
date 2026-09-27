@@ -55,5 +55,10 @@ def strategy_config(directory, name, base):
         return base
     overrides = json.loads(path.read_text(encoding="utf-8-sig"))
     if not isinstance(overrides, dict) or set(overrides) - asdict(base).keys():
-        raise ValueError(f"Invalid setting names in {path.name}")
+        config_keys = set(asdict(base))
+        allowed_meta_keys = {"description", "screener"}
+        unknown = set(overrides) - config_keys - allowed_meta_keys
+        if unknown:
+            raise ValueError(f"Invalid setting names in {path.name}")
+        overrides = {key: value for key, value in overrides.items() if key in config_keys}
     return Config(**{**asdict(base), **overrides})

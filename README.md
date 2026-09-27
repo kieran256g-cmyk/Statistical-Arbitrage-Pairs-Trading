@@ -213,12 +213,14 @@ group, and the results record every shared relationship. Set `screenMode` to
 
 ## Add a completely new strategy
 
-Each Node screener strategy is a small file in `pair_strategies/`. Copy
-`pair_strategies/template.mjs`, rename the copy, and change its `signal`
-function. The function receives the current z-score, spread, hedge ratio,
-current and previous prices, prior position, date, and every setting from the
-matching entry in `pairs.config.json`. It must return `1` (long the left ticker,
-short the right), `-1` (short the left ticker, long the right), or `0` (flat).
+Every editable strategy lives in `strategies/` as the same two files:
+
+- `strategies/<name>.py` contains the trading rules.
+- `strategies/<name>.json` contains the settings, description and screener fields.
+
+Copy `strategies/_template.py`, rename the copy, and change `signal`,
+`entry_side` and `exit_reason`. Then copy one of the existing `.json` files,
+rename it to match, and edit its thresholds and `screener` block.
 
 Then add a configuration entry such as:
 
@@ -239,9 +241,9 @@ Then add a configuration entry such as:
 }
 ```
 
-`plugin` uses the filename without `.mjs`. The included `mean_reversion` and
-`momentum_spread` plugins are working examples. Changing either the strategy
-settings or its plugin file automatically invalidates its old cached results.
+`plugin` uses the strategy filename without `.py` or `.json`. The included
+`mean_reversion` and `momentum_spread` strategies are working examples.
+Changing the strategy settings automatically invalidates its old cached results.
 
 Additional included strategies are `distance_zscore` (normalised-price
 divergence), `cointegration` (hedge-ratio residual), `sector_etf` (a stock

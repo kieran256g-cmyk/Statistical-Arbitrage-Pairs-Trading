@@ -32,7 +32,7 @@ strategy Python file. The JSON format accepts only the documented Config fields.
 `signal(history, config)` receives an immutable tuple of Bars from the first
 observation through today's close, never future observations. Each Bar has
 `date`, `price_a`, `price_b`; basket prices represent the two selected sides.
-Return `pairs_trading.strategy.Signal(spread, zscore)` with finite numbers or
+Return `pairs_trading.signals.Signal(spread, zscore)` with finite numbers or
 `zscore=None` during warm-up. The second field can carry your own scalar score;
 the CSV column is still called `zscore`. The engine enforces `lookback` warm-up.
 
@@ -57,3 +57,13 @@ These are editable examples, not optimized or validated profitable strategies.
 This interface controls signals and rules; the execution model remains a
 two-sided, equal-notional long/short trade with fixed holdings until exit.
 It does not provide arbitrary independent orders or per-stock weights.
+
+## Screener settings
+
+The batch screener uses the matching `<name>.json` file in this folder. The
+`screener.scoreField` setting chooses which score to trade, such as `z`,
+`distanceZ` or `factorZ`. `screener.highScoreSide` chooses what to do when that
+score is high: `-1` shorts the left side and buys the right side, while `1`
+buys the left side and shorts the right side.
+
+Reference the strategy filename without `.py` or `.json` in `pairs.config.json`.

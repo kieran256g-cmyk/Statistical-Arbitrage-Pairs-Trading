@@ -1,0 +1,11 @@
+{
+  "description": "Trades a near-equivalent share class or dual-listed pair using a tight residual threshold.",
+  "lookback": 60,
+  "entry_z": 1.5,
+  "exit_z": 0.25,
+  "stop_z": 4.0,
+  "screener": {
+    "scoreField": "z",
+    "highScoreSide": -1
+  }
+}

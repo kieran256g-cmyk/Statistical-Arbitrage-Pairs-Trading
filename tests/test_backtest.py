@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from pairs_trading.backtest import backtest
 from pairs_trading.config import Config, load_config
 from pairs_trading.data import Bar, load_prices, make_demo
-from pairs_trading.strategy import Signal, signals, entry_side, exit_reason
+from pairs_trading.signals import Signal, signals, entry_side, exit_reason
 
 
 def price_bars(prices):

@@ -1,9 +1,9 @@
-"""Trade toward the average price relationship. Edit or copy this file."""
+"""Trade a pair after removing its configured market or sector factor."""
 from pairs_trading.signals import signals as rolling_signals
 from pairs_trading.signals import entry_side as mean_reversion_entry
 from pairs_trading.signals import exit_reason as mean_reversion_exit
 
-DESCRIPTION = "Mean reversion of the rolling log-price ratio"
+DESCRIPTION = "Factor-neutral spread mean reversion"
 
 
 def signal(history, config):

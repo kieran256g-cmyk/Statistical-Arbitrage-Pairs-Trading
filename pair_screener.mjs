@@ -7,7 +7,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT = path.join(ROOT, 'outputs');
@@ -15,7 +15,7 @@ const CONFIG_PATH = path.join(ROOT, 'pairs.config.json');
 const CACHE_PATH = path.join(OUTPUT, 'pair-results.json');
 const CSV_PATH = path.join(OUTPUT, 'pair-results.csv');
 const PRICE_CACHE_DIR = path.join(OUTPUT, 'price-cache');
-const STRATEGY_DIR = path.join(ROOT, 'pair_strategies');
+const STRATEGY_DIR = path.join(ROOT, 'strategies');
 
 const args = new Set(process.argv.slice(2));
 const valueAfter = (name) => {
@@ -85,15 +85,38 @@ function strategiesFrom(config) {
 async function loadStrategies(configStrategies) {
   return Promise.all(configStrategies.map(async (strategy) => {
     if (!/^[a-z0-9_]+$/i.test(strategy.plugin)) throw new Error(`Invalid strategy plugin name: ${strategy.plugin}`);
-    const pluginFile = path.join(STRATEGY_DIR, `${strategy.plugin}.mjs`);
+    const strategyFile = path.join(STRATEGY_DIR, `${strategy.plugin}.json`);
     let source;
-    try { source = await fs.readFile(pluginFile, 'utf8'); }
-    catch { throw new Error(`Strategy plugin not found: ${pluginFile}`); }
+    try { source = await fs.readFile(strategyFile, 'utf8'); }
+    catch { throw new Error(`Strategy settings not found: ${strategyFile}`); }
     const pluginHash = crypto.createHash('sha256').update(source).digest('hex');
-    const plugin = await import(`${pathToFileURL(pluginFile).href}?version=${pluginHash}`);
-    if (typeof plugin.signal !== 'function') throw new Error(`${strategy.plugin} must export a signal(context) function.`);
-    return { ...strategy, signal: plugin.signal, pluginHash, pluginMetadata: plugin.metadata ?? {} };
+    const strategyConfig = JSON.parse(source);
+    const screener = strategyConfig.screener ?? {};
+    return {
+      ...strategy,
+      signal: screenerSignal(strategy.plugin, screener),
+      pluginHash,
+      pluginMetadata: { description: strategyConfig.description ?? '' },
+      screener
+    };
   }));
+}
+
+function screenerSignal(pluginName, screener) {
+  const scoreField = screener.scoreField ?? 'z';
+  const highScoreSide = screener.highScoreSide ?? -1;
+  return (context) => {
+    const score = context[scoreField];
+    const { previousPosition, settings } = context;
+    if (!Number.isFinite(score)) return previousPosition;
+    if (previousPosition === 0) {
+      if (score >= settings.entryZ) return highScoreSide;
+      if (score <= -settings.entryZ) return -highScoreSide;
+      return 0;
+    }
+    if (Math.abs(score) <= settings.exitZ) return 0;
+    return previousPosition;
+  };
 }
 function candidatePairs(config) {
   const order = new Map(config.tickers.map((ticker, index) => [ticker, index]));

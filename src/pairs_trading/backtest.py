@@ -5,7 +5,7 @@ from statistics import mean, stdev
 
 from .config import Config
 from .data import Bar, validate_bars
-from .strategy import signals, entry_side, exit_reason
+from .signals import signals, entry_side, exit_reason
 
 
 @dataclass

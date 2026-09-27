@@ -1,18 +1,25 @@
 """Illustrative relative momentum; follows a deviation instead of fading it."""
-from pairs_trading.strategy import signals, entry_side as reversion_entry, exit_reason as reversion_exit
+from pairs_trading.signals import signals as rolling_signals
+from pairs_trading.signals import entry_side as mean_reversion_entry
+from pairs_trading.signals import exit_reason as mean_reversion_exit
 
 DESCRIPTION = "Relative momentum of the rolling log-price ratio"
 
 
 def signal(history, config):
-    return signals(history[-(config.lookback + 1):], config.lookback)[-1]
+    """Calculate today's score from the available price history."""
+    recent_history = history[-(config.lookback + 1):]
+    return rolling_signals(recent_history, config.lookback)[-1]
 
 
 def entry_side(z, config):
-    return -reversion_entry(z, config)
+    """Choose the opening direction while flat."""
+    return -mean_reversion_entry(z, config)
 
 
 def exit_reason(z, side, next_holding_bars, net_unrealized, entry_gross, config):
-    # Exit when momentum fades back into the band, or a stop/time limit triggers.
-    reason = reversion_exit(z, -side, next_holding_bars, net_unrealized, entry_gross, config)
+    """Return a reason to close the trade, or None to keep holding."""
+    reason = mean_reversion_exit(
+        z, -side, next_holding_bars, net_unrealized, entry_gross, config
+    )
     return "momentum_faded" if reason == "mean_reversion" else reason

@@ -1,0 +1,11 @@
+{
+  "description": "Trades divergence in normalized-price distance rather than regression residuals.",
+  "lookback": 60,
+  "entry_z": 2.0,
+  "exit_z": 0.5,
+  "stop_z": 4.0,
+  "screener": {
+    "scoreField": "distanceZ",
+    "highScoreSide": -1
+  }
+}

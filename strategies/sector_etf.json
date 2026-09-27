@@ -1,5 +1,5 @@
 {
-  "description": "Fades an extreme spread and exits once it moves back toward normal.",
+  "description": "Trades a constituent stock against its sector ETF when their residual spread diverges.",
   "lookback": 60,
   "entry_z": 2.0,
   "exit_z": 0.5,

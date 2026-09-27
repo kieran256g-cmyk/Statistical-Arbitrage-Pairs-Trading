@@ -1,5 +1,5 @@
 {
-  "description": "Fades an extreme spread and exits once it moves back toward normal.",
+  "description": "Trades an OLS hedge-ratio residual after the engine validates mean reversion.",
   "lookback": 60,
   "entry_z": 2.0,
   "exit_z": 0.5,
