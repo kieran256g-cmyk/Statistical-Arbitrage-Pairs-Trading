@@ -5,7 +5,8 @@
     "V", "MA", "AXP", "PYPL", "COF", "SOFI", "XYZ", "AFRM", "HOOD", "IBKR", "CME", "ICE", "CBOE", "NDAQ", "SPGI", "MCO", "MSCI", "FDS", "JPM", "BAC", "WFC", "C", "GS", "MS", "USB", "PNC", "TFC", "SCHW", "RJF", "AON",
     "XOM", "CVX", "COP", "OXY", "EOG", "DVN", "FANG", "APA", "EQT", "AR", "RRC", "OVV", "LNG", "KMI", "WMB", "TRGP", "OKE", "ET", "MPLX", "PAA", "PSX", "MPC", "VLO", "DK", "SUN", "HAL", "SLB", "BKR", "NOV", "FTI",
     "KO", "PEP", "KDP", "MNST", "PM", "MO", "BTI", "UL", "PG", "CL", "KMB", "CHD", "CLX", "SJM", "HSY", "MDLZ", "GIS", "KHC", "HRL", "CAG", "CPB", "TSN", "MKC", "STZ", "TAP", "SAM", "BF-B", "DEO", "FIZZ", "CELH",
-    "CAT", "DE", "HON", "GE", "ETN", "EMR", "ROK", "PH", "CMI", "PCAR", "WAB", "URI", "FAST", "GWW", "ITW", "DOV", "ROP", "TDG", "RTX", "LMT", "NOC", "GD", "BA", "UPS", "FDX", "UNP", "CSX", "NSC", "JBHT", "ODFL"
+    "CAT", "DE", "HON", "GE", "ETN", "EMR", "ROK", "PH", "CMI", "PCAR", "WAB", "URI", "FAST", "GWW", "ITW", "DOV", "ROP", "TDG", "RTX", "LMT", "NOC", "GD", "BA", "UPS", "FDX", "UNP", "CSX", "NSC", "JBHT", "ODFL",
+    "SPY", "XLK", "XLF", "XLE", "XLP", "XLI", "GOOG", "FOX", "FOXA", "NWS", "NWSA", "BF-A"
   ],
   "historyYears": 10,
   "screenMode": "withinGroups",
@@ -17,6 +18,16 @@
     "consumer staples and beverages": ["KO", "PEP", "KDP", "MNST", "PM", "MO", "BTI", "UL", "PG", "CL", "KMB", "CHD", "CLX", "SJM", "HSY", "MDLZ", "GIS", "KHC", "HRL", "CAG", "CPB", "TSN", "MKC", "STZ", "TAP", "SAM", "BF-B", "DEO", "FIZZ", "CELH"],
     "industrials and transport": ["CAT", "DE", "HON", "GE", "ETN", "EMR", "ROK", "PH", "CMI", "PCAR", "WAB", "URI", "FAST", "GWW", "ITW", "DOV", "ROP", "TDG", "RTX", "LMT", "NOC", "GD", "BA", "UPS", "FDX", "UNP", "CSX", "NSC", "JBHT", "ODFL"]
   },
+  "directPairs": [
+    { "relationship": "dual-listed or share class", "pairs": [["GOOG", "GOOGL"], ["FOX", "FOXA"], ["NWS", "NWSA"], ["BF-A", "BF-B"]] }
+  ],
+  "etfPairs": [
+    { "relationship": "sector ETF vs stock", "etf": "XLK", "members": ["NVDA", "AMD", "AVGO", "QCOM", "TXN", "ADI", "CSCO", "ORCL"] },
+    { "relationship": "sector ETF vs stock", "etf": "XLF", "members": ["JPM", "BAC", "WFC", "C", "GS", "MS", "SCHW", "COF"] },
+    { "relationship": "sector ETF vs stock", "etf": "XLE", "members": ["XOM", "CVX", "COP", "OXY", "EOG", "SLB", "HAL", "MPC"] },
+    { "relationship": "sector ETF vs stock", "etf": "XLP", "members": ["KO", "PEP", "PG", "CL", "KMB", "GIS", "MDLZ", "HSY"] },
+    { "relationship": "sector ETF vs stock", "etf": "XLI", "members": ["CAT", "DE", "HON", "GE", "ETN", "EMR", "UNP", "CSX"] }
+  ],
   "strategies": [
     {
       "name": "balanced",
@@ -59,6 +70,36 @@
       "minTrades": 4,
       "adfCriticalValue": -3.34,
       "maxHedgeRatioDrift": 0.35
+    },
+    {
+      "name": "distance-zscore",
+      "plugin": "distance_zscore",
+      "formationDays": 252, "trainingDays": 1260, "testDays": 504,
+      "entryZ": 2, "exitZ": 0.5, "costBpsPerLeg": 10, "shortBorrowBpsAnnual": 50, "minTrades": 5, "adfCriticalValue": -3.34, "maxHedgeRatioDrift": 0.35
+    },
+    {
+      "name": "cointegration",
+      "plugin": "cointegration",
+      "formationDays": 252, "trainingDays": 1260, "testDays": 504,
+      "entryZ": 2, "exitZ": 0.5, "costBpsPerLeg": 10, "shortBorrowBpsAnnual": 50, "minTrades": 5, "adfCriticalValue": -3.34, "maxHedgeRatioDrift": 0.35
+    },
+    {
+      "name": "sector-etf",
+      "plugin": "sector_etf", "relationships": ["sector ETF vs stock"],
+      "formationDays": 252, "trainingDays": 1260, "testDays": 504,
+      "entryZ": 2, "exitZ": 0.5, "costBpsPerLeg": 10, "shortBorrowBpsAnnual": 50, "minTrades": 5, "adfCriticalValue": -3.34, "maxHedgeRatioDrift": 0.35
+    },
+    {
+      "name": "dual-listed",
+      "plugin": "dual_listed", "relationships": ["dual-listed or share class"],
+      "formationDays": 252, "trainingDays": 1260, "testDays": 504,
+      "entryZ": 1.5, "exitZ": 0.25, "costBpsPerLeg": 10, "shortBorrowBpsAnnual": 50, "minTrades": 5, "adfCriticalValue": -3.34, "maxHedgeRatioDrift": 0.2
+    },
+    {
+      "name": "factor-neutral-spy",
+      "plugin": "factor_neutral", "factorTicker": "SPY",
+      "formationDays": 252, "trainingDays": 1260, "testDays": 504,
+      "entryZ": 2, "exitZ": 0.5, "costBpsPerLeg": 10, "shortBorrowBpsAnnual": 50, "minTrades": 5, "adfCriticalValue": -3.34, "maxHedgeRatioDrift": 0.35
     }
   ]
 }

@@ -243,6 +243,13 @@ Then add a configuration entry such as:
 `momentum_spread` plugins are working examples. Changing either the strategy
 settings or its plugin file automatically invalidates its old cached results.
 
+Additional included strategies are `distance_zscore` (normalised-price
+divergence), `cointegration` (hedge-ratio residual), `sector_etf` (a stock
+against its sector ETF), `dual_listed` (share-class or dual-listed pairs), and
+`factor_neutral` (removes the configured `factorTicker`, such as `SPY`). The
+ETF and direct share-class pairs are defined in `etfPairs` and `directPairs` in
+the configuration, so those strategies do not run on unrelated companies.
+
 The six default groups contain about 30 companies each: semiconductors and
 equipment, data-centre and networking, financials and payments, energy,
 consumer staples and beverages, and industrials and transport. Every qualified

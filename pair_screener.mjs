@@ -54,6 +54,24 @@ function pairFit(prices) {
   const fit = linearFit(x, y);
   return { ...fit, residuals: prices.map(p => Math.log(p[0]) - (fit.intercept + fit.beta * Math.log(p[1]))) };
 }
+function zScore(values) {
+  const average = mean(values);
+  const deviation = std(values);
+  return deviation ? (values.at(-1) - average) / deviation : 0;
+}
+function factorNeutralZ(window, current) {
+  const factor = window.map(row => Math.log(row[2]));
+  const left = window.map(row => Math.log(row[0]));
+  const right = window.map(row => Math.log(row[1]));
+  const leftBeta = linearFit(factor, left).beta;
+  const rightBeta = linearFit(factor, right).beta;
+  const adjustedLeft = left.map((value, index) => value - leftBeta * factor[index]);
+  const adjustedRight = right.map((value, index) => value - rightBeta * factor[index]);
+  const fit = linearFit(adjustedRight, adjustedLeft);
+  const residuals = adjustedLeft.map((value, index) => value - (fit.intercept + fit.beta * adjustedRight[index]));
+  const now = Math.log(current[0]) - leftBeta * Math.log(current[2]) - (fit.intercept + fit.beta * (Math.log(current[1]) - rightBeta * Math.log(current[2])));
+  return zScore([...residuals, now]);
+}
 function escapeCsv(value) { return `"${String(value ?? '').replaceAll('"', '""')}"`; }
 function fingerprint(strategy) {
   const { signal, pluginMetadata, ...serializable } = strategy;
@@ -96,6 +114,8 @@ function candidatePairs(config) {
       for (let i = 0; i < members.length; i++) for (let j = i + 1; j < members.length; j++) addPair(members[i], members[j], group);
     }
   }
+  for (const item of config.directPairs ?? []) for (const [a, b] of item.pairs ?? []) addPair(a, b, item.relationship);
+  for (const item of config.etfPairs ?? []) for (const ticker of item.members ?? []) addPair(item.etf, ticker, item.relationship);
   return [...pairs.values()].map(row => ({ ...row, relationship: [...new Set(row.relationship)].join('; ') }));
 }
 
@@ -123,9 +143,9 @@ async function getPrices(ticker, years) {
   return rows;
 }
 
-function testPair(leftTicker, rightTicker, left, right, strategy) {
-  const dates = [...left.keys()].filter(date => right.has(date)).sort();
-  const prices = dates.map(date => [left.get(date), right.get(date)]);
+function testPair(leftTicker, rightTicker, left, right, strategy, factor) {
+  const dates = [...left.keys()].filter(date => right.has(date) && (!factor || factor.has(date))).sort();
+  const prices = dates.map(date => [left.get(date), right.get(date), factor?.get(date)]);
   const testStart = dates.length - strategy.testDays;
   const trainingStart = testStart - strategy.trainingDays;
   if (trainingStart < 0) throw new Error(`Needs ${strategy.trainingDays + strategy.testDays} shared trading days; found ${dates.length}`);
@@ -150,6 +170,9 @@ function testPair(leftTicker, rightTicker, left, right, strategy) {
     const fit = linearFit(x, y);
     const residuals = window.map(p => Math.log(p[0]) - (fit.intercept + fit.beta * Math.log(p[1])));
     const z = (Math.log(prices[i][0]) - (fit.intercept + fit.beta * Math.log(prices[i][1])) - mean(residuals)) / std(residuals);
+    const distanceSpread = window.map(p => p[0] / window[0][0] - p[1] / window[0][1]);
+    const distanceZ = zScore([...distanceSpread, prices[i][0] / window[0][0] - prices[i][1] / window[0][1]]);
+    const neutralZ = factor ? factorNeutralZ(window, prices[i]) : z;
     const previous = prices[i - 1];
     const longReturn = (prices[i][0] / previous[0] - 1) - fit.beta * (prices[i][1] / previous[1] - 1);
     const gross = 1 + Math.abs(fit.beta);
@@ -157,7 +180,7 @@ function testPair(leftTicker, rightTicker, left, right, strategy) {
     const shortWeight = position > 0 ? Math.abs(fit.beta) / gross : 1 / gross;
     if (position !== 0) returned -= (strategy.shortBorrowBpsAnnual / 10000 / 252) * shortWeight;
     const nextPosition = strategy.signal({
-      date: dates[i], z, spread: Math.log(prices[i][0]) - (fit.intercept + fit.beta * Math.log(prices[i][1])),
+      date: dates[i], z, distanceZ, factorZ: neutralZ, spread: Math.log(prices[i][0]) - (fit.intercept + fit.beta * Math.log(prices[i][1])),
       hedgeRatio: fit.beta, previousPosition: position, leftPrice: prices[i][0], rightPrice: prices[i][1],
       leftPreviousPrice: previous[0], rightPreviousPrice: previous[1], settings: strategy
     });
@@ -215,10 +238,12 @@ async function main() {
   for (const candidate of pairs) {
     const { leftTicker: a, rightTicker: b, pair, relationship } = candidate;
     for (const strategy of strategies) {
+      if (strategy.relationships?.length && !strategy.relationships.some(label => relationship.split('; ').includes(label))) continue;
       const strategyFingerprint = fingerprint(strategy);
       const cacheKey = `${pair}|${strategy.name}`;
       const cached = prior.get(cacheKey);
-      const missing = downloadErrors.get(a) ?? downloadErrors.get(b);
+      const factor = strategy.factorTicker ? prices.get(strategy.factorTicker) : null;
+      const missing = downloadErrors.get(a) ?? downloadErrors.get(b) ?? (strategy.factorTicker && !factor ? `Missing factor ticker ${strategy.factorTicker}` : null);
       if (missing) {
         results.push({ pair, leftTicker: a, rightTicker: b, relationship, strategyName: strategy.name, error: missing, qualified: false, profitable: false, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() });
         continue;
@@ -228,7 +253,7 @@ async function main() {
         continue;
       }
       try {
-        const result = round(testPair(a, b, prices.get(a), prices.get(b), strategy));
+        const result = round(testPair(a, b, prices.get(a), prices.get(b), strategy, factor));
         results.push({ ...result, relationship, qualityScore: qualityScore(result, strategy), strategyName: strategy.name, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() });
       }
       catch (error) { results.push({ pair, leftTicker: a, rightTicker: b, relationship, strategyName: strategy.name, error: error.message, profitable: false, strategyFingerprint, reused: false, checkedAt: new Date().toISOString() }); }
