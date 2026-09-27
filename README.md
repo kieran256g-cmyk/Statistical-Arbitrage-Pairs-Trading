@@ -262,3 +262,11 @@ and hedge-ratio stability. It is a ranking aid, not a trading recommendation.
 ```powershell
 node .\pair_screener.mjs
 ```
+##Limitations
+
+The model does not credit interest on capital that is not currently deployed in a position. 
+In practice, unused capital in a pair or basket trade would typically sit in cash, 
+short-term bonds, an ETF, or serve as margin collateral, all of which normally earn 
+some return. The short leg's borrow cost is charged via annual_borrow_rate, but idle
+capital is not credited with any offsetting return. Since this opportunity cost is not
+modeled, reported returns are modestly overstated relative to a fully cash-adjusted backtest.
