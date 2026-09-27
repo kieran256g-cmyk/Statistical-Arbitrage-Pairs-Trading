@@ -19,13 +19,18 @@ code executed locally with your permissions, so only use files you trust.
 ## Settings versus logic
 
 - `config.json`: shared capital, costs, risk limits and default signal settings.
-- `strategies/<name>.json`: optional overrides for that strategy.
+- `strategies/<name>.json`: the editable parameters for that strategy.
 - `--config path.json`: explicitly replaces both layers for a run (unspecified
   fields take the Config class defaults). Reports record the effective settings.
 - `strategies/<name>.py`: signal calculation, entry direction and exit rules.
 
-For additional private parameters, define named constants at the top of your
-strategy Python file. The JSON format accepts only the documented Config fields.
+The top-level JSON keys use the Python runner names, such as `entry_z` and
+`exit_z`. The nested `screener` block uses the batch screener names, such as
+`entryZ`, `formationDays` and `scoreField`.
+
+Strategy settings do not include idle-cash interest, ISA or short-term bond
+returns, index benchmarks, ETF mechanics, or margin financing. Those are outside
+the simplified return model; see [limitations](../LIMITATIONS.md).
 
 ## Three functions
 
@@ -60,10 +65,12 @@ It does not provide arbitrary independent orders or per-stock weights.
 
 ## Screener settings
 
-The batch screener uses the matching `<name>.json` file in this folder. The
-`screener.scoreField` setting chooses which score to trade, such as `z`,
-`distanceZ` or `factorZ`. `screener.highScoreSide` chooses what to do when that
-score is high: `-1` shorts the left side and buys the right side, while `1`
-buys the left side and shorts the right side.
+The batch screener uses the matching `<name>.json` file in this folder.
+Edit the `screener` block there to change training windows, thresholds, costs
+and scoring:
+
+- `scoreField`: which score to trade, such as `z`, `distanceZ` or `factorZ`.
+- `highScoreSide`: what to do when the score is high. `-1` shorts the left side
+  and buys the right side; `1` buys the left side and shorts the right side.
 
 Reference the strategy filename without `.py` or `.json` in `pairs.config.json`.

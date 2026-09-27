@@ -20,7 +20,10 @@ The cash ledger therefore represents trading in adjusted-price units: a convenie
 total-return approximation, not exact real share counts or broker statements.
 Cash dividends, short dividend payments and corporate actions are not separately
 simulated. Check provider handling of restructurings/spinoffs before interpreting
-returns across those dates, particularly for Western Digital.
+returns across those dates, particularly for Western Digital. The model also
+omits idle-cash interest, ISA or short-term bond parking returns, benchmark
+index alternatives, ETF mechanics and margin financing; see
+[limitations](../../LIMITATIONS.md).
 
 Missing observations are dropped. Pair dates are the intersection of both series;
 basket dates intersect all three. No forward filling is performed. All requested

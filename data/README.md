@@ -21,3 +21,6 @@ separately book dividends, so adjusted series and their economic interpretation
 need care. Weekly or irregular observations also invalidate the default
 252-session annualization assumption. Record the provider, adjustment policy,
 download date, symbols, and formation/hold-out periods with real experiments.
+The backtest also omits idle-cash interest, ISA or short-term bond parking
+returns, benchmark index alternatives, ETF mechanics and margin financing; see
+[limitations](../LIMITATIONS.md).

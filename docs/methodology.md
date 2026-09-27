@@ -92,13 +92,15 @@ total-return proxy in adjusted-share units, not a reconstruction of actual cash
 dividend flows or real share counts. The three-stock choice uses Dell versus a
 fixed-coefficient NVIDIA/Micron basket. See [market data and basket construction](../data/market/README.md).
 
-This template omits dividends, cash/financing interest, margin requirements,
-short availability and recalls, price impact, minimum lots, exchange calendars,
-and intraday stop execution. Costs are constant assumptions, not venue quotes.
-Both legs are assumed fillable simultaneously at the supplied next closes.
-Do not interpret synthetic performance as evidence of a profitable strategy.
-For real experiments, use point-in-time inputs, hold-out periods, sensitivity
-checks, and realistic market-specific execution assumptions.
+This template omits dividends, idle-cash interest, ISA or short-term bond
+parking returns, benchmark index alternatives, ETF mechanics, margin
+requirements, short availability and recalls, price impact, minimum lots,
+exchange calendars, and intraday stop execution. Costs are constant
+assumptions, not venue quotes. Both legs are assumed fillable simultaneously at
+the supplied next closes. Do not interpret synthetic performance as evidence of
+a profitable strategy. For real experiments, use point-in-time inputs, hold-out
+periods, sensitivity checks, and realistic market-specific execution
+assumptions. See [limitations](../LIMITATIONS.md).
 
 ## Background
 

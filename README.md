@@ -72,19 +72,17 @@ See [data details](data/symbols/README.md).
 
 ## Change settings or add your own strategy
 
-Two editable examples are included:
+Every strategy has two files in `strategies/`:
 
-- **mean_reversion**: buy the relatively cheaper side and short the dearer side,
-  expecting the price relationship to return toward its average.
-- **momentum**: follow a large relative-price deviation and exit when it fades.
+- `<name>.py` contains the rule logic.
+- `<name>.json` contains the editable parameters.
 
 To add your own:
 
 1. Copy **[strategies/_template.py](strategies/_template.py)** to
    `strategies/my_strategy.py`.
-2. Change the entry and exit rules in your copy.
-3. Optionally copy `strategies/mean_reversion.json` to
-   `strategies/my_strategy.json` and change its thresholds.
+2. Copy an existing strategy JSON to `strategies/my_strategy.json`.
+3. Change the rules in the `.py` file and the parameters in the `.json` file.
 4. Run again; **my_strategy** automatically appears in the menu.
 
 Read [the strategy guide](strategies/README.md) for the three simple functions,
@@ -96,7 +94,7 @@ holding limits and loss limits consistent.
 | --- | --- |
 | `company_groups.json` | Company lists and group names |
 | `strategies/<name>.py` | Your signal, entry and exit logic |
-| `strategies/<name>.json` | That strategy's settings |
+| `strategies/<name>.json` | That strategy's parameters |
 | `config.json` | Shared defaults for capital, costs and risk limits |
 | `src/pairs_trading/backtest.py` | Execution/accounting model, for advanced changes |
 
@@ -140,7 +138,8 @@ include proportional fees/slippage and short borrowing; stops can overshoot
 because they also execute at the next close. The engine enforces loss and
 maximum holding limits for custom strategies and liquidates at the final close.
 There is no automatic cointegration test, fitted basket weight model or live
-order execution. See [methodology](docs/methodology.md).
+order execution. See [methodology](docs/methodology.md) and
+[limitations](LIMITATIONS.md).
 
 ## Existing presets and custom CSVs
 
@@ -183,11 +182,10 @@ python -m unittest discover -s tests -v
 
 ## Batch multi-strategy screener
 
-`pair_screener.mjs` tests every unique pair listed in
-`pairs.config.json` against each named strategy in that file. Add a ticker to
-automatically test its pairs with every existing ticker; add a strategy to test
-it against every pair. Results are written to `outputs/pair-results.json` and
-`outputs/pair-results.csv`.
+`pair_screener.mjs` tests every unique pair listed in `pairs.config.json`.
+That file controls the ticker universe and the list of strategies to run. Each
+strategy's screener parameters live in `strategies/<name>.json`. Results are
+written to `outputs/pair-results.json` and `outputs/pair-results.csv`.
 
 Negative results are reused on later runs only when the named strategy’s
 settings have not changed. Profitable results are retested. Use
@@ -198,6 +196,9 @@ Each strategy has separate training and out-of-sample test windows. A pair must
 pass the training residual mean-reversion threshold and hedge-ratio stability
 threshold before its out-of-sample return can qualify. The backtest charges
 costs for both legs on entry and exit and applies an annual short-borrow cost.
+It does not add idle-cash interest, bond/ISA parking returns, benchmark index
+returns, ETF mechanics, or margin financing to the result; see
+[limitations](LIMITATIONS.md).
 
 The included universe covers memory, storage, semiconductors, networking,
 servers, hyperscalers, beverages, payments and energy. The screener downloads
@@ -211,39 +212,20 @@ chipmaker against a beverage company. A company may belong to more than one
 group, and the results record every shared relationship. Set `screenMode` to
 `all` only when deliberately exploring every possible combination.
 
-## Add a completely new strategy
+## Add a strategy to the screener
 
-Every editable strategy lives in `strategies/` as the same two files:
-
-- `strategies/<name>.py` contains the trading rules.
-- `strategies/<name>.json` contains the settings, description and screener fields.
-
-Copy `strategies/_template.py`, rename the copy, and change `signal`,
-`entry_side` and `exit_reason`. Then copy one of the existing `.json` files,
-rename it to match, and edit its thresholds and `screener` block.
-
-Then add a configuration entry such as:
+Add the strategy name to the simple list in `pairs.config.json`:
 
 ```json
-{
-  "name": "my-new-strategy",
-  "plugin": "my_strategy",
-  "formationDays": 252,
-  "trainingDays": 1260,
-  "testDays": 504,
-  "entryZ": 2.5,
-  "exitZ": 0.75,
-  "costBpsPerLeg": 10,
-  "shortBorrowBpsAnnual": 50,
-  "minTrades": 4,
-  "adfCriticalValue": -3.34,
-  "maxHedgeRatioDrift": 0.35
-}
+"strategies": [
+  "mean_reversion",
+  "momentum_spread",
+  "my_strategy"
+]
 ```
 
-`plugin` uses the strategy filename without `.py` or `.json`. The included
-`mean_reversion` and `momentum_spread` strategies are working examples.
-Changing the strategy settings automatically invalidates its old cached results.
+The name is the filename without `.py` or `.json`. Changing that strategy's JSON
+settings automatically invalidates its old cached screener results.
 
 Additional included strategies are `distance_zscore` (normalised-price
 divergence), `cointegration` (hedge-ratio residual), `sector_etf` (a stock

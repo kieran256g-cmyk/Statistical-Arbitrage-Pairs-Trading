@@ -1,21 +1,19 @@
 {
-  "description": "Trades a constituent stock against its sector ETF when their residual spread diverges.",
+  "description": "Fades only larger spread extremes and allows fewer qualifying trades.",
   "lookback": 60,
-  "entry_z": 2.0,
+  "entry_z": 2.5,
   "exit_z": 0.5,
   "stop_z": 4.0,
   "screener": {
-    "relationships": [
-      "sector ETF vs stock"
-    ],
-    "formationDays": 252,
+    "name": "selective",
+    "formationDays": 378,
     "trainingDays": 1260,
     "testDays": 504,
-    "entryZ": 2.0,
+    "entryZ": 2.5,
     "exitZ": 0.5,
     "costBpsPerLeg": 10,
     "shortBorrowBpsAnnual": 50,
-    "minTrades": 5,
+    "minTrades": 4,
     "adfCriticalValue": -3.34,
     "maxHedgeRatioDrift": 0.35,
     "scoreField": "z",

@@ -5,6 +5,19 @@
   "exit_z": 0.25,
   "stop_z": 4.0,
   "screener": {
+    "relationships": [
+      "dual-listed or share class"
+    ],
+    "formationDays": 252,
+    "trainingDays": 1260,
+    "testDays": 504,
+    "entryZ": 1.5,
+    "exitZ": 0.25,
+    "costBpsPerLeg": 10,
+    "shortBorrowBpsAnnual": 50,
+    "minTrades": 5,
+    "adfCriticalValue": -3.34,
+    "maxHedgeRatioDrift": 0.2,
     "scoreField": "z",
     "highScoreSide": -1
   }

@@ -78,11 +78,27 @@ function fingerprint(strategy) {
   return crypto.createHash('sha256').update(JSON.stringify(serializable)).digest('hex');
 }
 function strategiesFrom(config) {
-  if (Array.isArray(config.strategies) && config.strategies.length) return config.strategies.map(strategy => ({ plugin: 'mean_reversion', ...strategy }));
-  if (config.strategy) return [{ name: 'default', plugin: 'mean_reversion', ...config.strategy }];
+  if (Array.isArray(config.strategies) && config.strategies.length) {
+    return config.strategies.map(strategy => (
+      typeof strategy === 'string' ? { plugin: strategy } : { plugin: strategy.plugin ?? strategy.name, ...strategy }
+    ));
+  }
+  if (config.strategy) return [{ plugin: 'mean_reversion', ...config.strategy }];
   throw new Error('Configure at least one strategy in the strategies array.');
 }
 async function loadStrategies(configStrategies) {
+  const defaults = {
+    formationDays: 252,
+    trainingDays: 1260,
+    testDays: 504,
+    entryZ: 2,
+    exitZ: 0.5,
+    costBpsPerLeg: 10,
+    shortBorrowBpsAnnual: 50,
+    minTrades: 5,
+    adfCriticalValue: -3.34,
+    maxHedgeRatioDrift: 0.35
+  };
   return Promise.all(configStrategies.map(async (strategy) => {
     if (!/^[a-z0-9_]+$/i.test(strategy.plugin)) throw new Error(`Invalid strategy plugin name: ${strategy.plugin}`);
     const strategyFile = path.join(STRATEGY_DIR, `${strategy.plugin}.json`);
@@ -92,8 +108,11 @@ async function loadStrategies(configStrategies) {
     const pluginHash = crypto.createHash('sha256').update(source).digest('hex');
     const strategyConfig = JSON.parse(source);
     const screener = strategyConfig.screener ?? {};
+    const settings = { ...defaults, ...screener, ...strategy };
     return {
-      ...strategy,
+      ...settings,
+      name: settings.name ?? screener.name ?? strategyConfig.name ?? strategy.plugin.replaceAll('_', '-'),
+      plugin: strategy.plugin,
       signal: screenerSignal(strategy.plugin, screener),
       pluginHash,
       pluginMetadata: { description: strategyConfig.description ?? '' },

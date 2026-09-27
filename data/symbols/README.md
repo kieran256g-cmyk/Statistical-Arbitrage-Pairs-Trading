@@ -20,10 +20,13 @@ The reports expose each constituent's signed adjusted-share holdings.
 
 Adjusted prices approximate total returns; they are not executable historical
 quotes. Corporate actions and cash dividends are not separately booked. Fees and
-borrow rates are shared across all constituents. Sector groups are convenience
-lists, not claims of identical businesses or statistical suitability. PayPal is a
-payments platform rather than the same type of card network as Visa/Mastercard;
-ConocoPhillips focuses on production rather than an integrated oil business.
+borrow rates are shared across all constituents. The model omits idle-cash
+interest, ISA or short-term bond parking returns, benchmark index alternatives,
+ETF mechanics and margin financing; see [limitations](../../LIMITATIONS.md).
+Sector groups are convenience lists, not claims of identical businesses or
+statistical suitability. PayPal is a payments platform rather than the same type
+of card network as Visa/Mastercard; ConocoPhillips focuses on production rather
+than an integrated oil business.
 
 Other company references: [Keurig Dr Pepper](https://www.keurigdrpepper.com/keurig-dr-pepper-reports-q2-results-and-reaffirms-guidance-for-2026/),
 [ConocoPhillips](https://www.conocophillips.com/investor-relations/stock-information/).

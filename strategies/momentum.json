@@ -6,6 +6,16 @@
   "stop_z": 4.0,
   "max_holding_bars": 15,
   "screener": {
+    "formationDays": 252,
+    "trainingDays": 1260,
+    "testDays": 504,
+    "entryZ": 2.5,
+    "exitZ": 0.75,
+    "costBpsPerLeg": 10,
+    "shortBorrowBpsAnnual": 50,
+    "minTrades": 4,
+    "adfCriticalValue": -3.34,
+    "maxHedgeRatioDrift": 0.35,
     "scoreField": "z",
     "highScoreSide": 1
   }
