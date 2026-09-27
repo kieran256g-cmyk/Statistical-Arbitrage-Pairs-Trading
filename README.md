@@ -258,5 +258,5 @@ return, Sharpe ratio, drawdown, trade count, training mean-reversion strength,
 and hedge-ratio stability. It is a ranking aid, not a trading recommendation.
 
 ```powershell
-& 'C:\Users\green\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe' .\pair_screener.mjs
+node .\pair_screener.mjs
 ```
